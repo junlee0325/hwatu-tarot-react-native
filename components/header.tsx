@@ -9,14 +9,14 @@ const Header = () => {
   return (
     <View style={styles.header}>
       <View style={styles.titleView}>
-        <Text style={{fontSize: 22}}>화투점</Text>
-        <Text style={{fontSize: 18}}>Hwatu Tarot</Text>
+        <Text style={{fontSize: 22, color: 'rgba(255, 234, 2, 1)'}}>화투점</Text>
+        <Text style={{fontSize: 18, color: 'rgba(255, 255, 255, 1)'}}>Hwatu Tarot</Text>
       </View>
       <View style={{display: 'flex', flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'flex-end'}}>
-        <Text style={{fontSize: 20}}>
+        <Text style={{fontSize: 20, color: 'rgba(255, 255, 255, 1)'}}>
             {days[dayNum]}
         </Text>
-        <Text style={{fontSize: 20}}>
+        <Text style={{fontSize: 20, color: 'rgba(255, 234, 2, 1)'}}>
             {date}
         </Text>
       </View>
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     titleView: {
         display: 'flex',
         flexDirection: 'column',
-        flexWrap: 'nowrap'
+        flexWrap: 'nowrap',
     },
     buttons: {
         aspectRatio: '1/1',

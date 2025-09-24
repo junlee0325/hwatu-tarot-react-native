@@ -43,11 +43,11 @@ const FourStack = ({ fourCards, imageSet, first, setFirst, second, setSecond }: 
       {fourCards.map((x, i) =>
         <Pressable
           key={i}
-          style={{ ...styles.imageBox, top: 15 * i, borderColor: first === x ? "green" : "black" }}
+          style={{ ...styles.imageBox, top: 15 * i, borderColor: first === x ? 'rgba(255, 234, 2, 1)' : 'black' }}
           onPress={() => handlePress(x)}
           disabled={x === fourCards[fourCards.length - 1] ? false : true}
         >
-          <Image source={x === fourCards[fourCards.length - 1] ? imageSet[x.img] : require('../assets/cardImgs/back.webp')} style={styles.image} resizeMode='contain'></Image>
+          <Image source={x === fourCards[fourCards.length - 1] ? imageSet[x.img] : require('../assets/cardImgs/back.webp')} style={styles.image} resizeMode='stretch'></Image>
         </Pressable>
       )}
     </View>
@@ -62,11 +62,10 @@ const styles = StyleSheet.create({
     aspectRatio: '230/360',
     position: 'absolute',
     borderWidth: 2,
-    borderRadius: 2
+    borderRadius: 3
   },
   image: {
     width: "100%",
     height: "100%",
-    borderRadius: 2
   }
 })

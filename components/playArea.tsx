@@ -1,6 +1,5 @@
-import { Link } from 'expo-router';
 import React from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 interface Card {
     month: string;
@@ -42,21 +41,6 @@ const PlayArea = ({ remaining, setRemaining, setVisible, imageSet, first, setFir
         }
     }
 
-    const handleDraw = () => {
-        if (remaining.length === 0) {
-            setRemaining(faceUps)
-            setFaceUps([])
-        } else {
-            const copyRemaining = [...remaining]
-            const drawn = copyRemaining.shift()
-
-            if (drawn) {
-                setFaceUps([...faceUps, drawn])
-                setRemaining(copyRemaining)
-            }
-        }
-    }
-
     const disableCheck = (card: Card) => {
         const firstCard = faceUps[0];
         const lastCard = faceUps[faceUps.length - 1];
@@ -78,42 +62,19 @@ const PlayArea = ({ remaining, setRemaining, setVisible, imageSet, first, setFir
     }
 
     return (
-        <View style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'flex-start' }}>
-            <View style={{ width: '20%', display: 'flex', alignItems: 'center', flexDirection: 'column-reverse', justifyContent: 'space-between' }}>
-                <View style={{ display: 'flex', flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'center' }}>
-                    <Text>{remaining.length}</Text>
-                    <TouchableOpacity
-                        style={styles.imageBox}
-                        onPress={() => handleDraw()}>
-                        <Image source={remaining.length > 0 ? require('../assets/cardImgs/back.webp') : require('../assets/cardImgs/circle.webp')} style={styles.image} resizeMode='contain' />
-                    </TouchableOpacity>
-                </View>
-                <View style={{ display: 'flex', flexDirection: 'column', flexWrap: 'nowrap', gap: 10 }}>
-                    <Link
-                        style={styles.buttons}
-                        href="/modal"
-                    >
-                        <Link.Trigger>
-                            <Text style={{ textAlign: 'center' }}>Info</Text>
-                        </Link.Trigger>
-                    </Link>
-                    <TouchableOpacity
-                        style={styles.buttons}
-                        onPress={() => { setVisible(true) }}
-                    >
-                        <Text style={{ textAlign: 'center' }}>Reset</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-            <ScrollView style={{ height: 220 }} contentContainerStyle={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', gap: 1 }}>
+        <View style={{ width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingHorizontal: 5, gap: 5}}>
+            <ScrollView 
+                style={{height: 200,  borderWidth: 2, borderRadius: 5, padding: 4, borderColor: 'rgba(255, 255, 255, 0.5)', backgroundColor: 'rgba(255, 255, 255, 0.05)'}} 
+                contentContainerStyle={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}
+                showsVerticalScrollIndicator={false}>
                 {faceUps.map((x, i) => (
                     <Pressable
                         key={i}
-                        style={{ ...styles.imageBox, opacity: disableCheck(x) ? 0.5 : 1, borderColor: first === x ? "green" : "black" }}
+                        style={{ ...styles.imageBox, opacity: disableCheck(x) ? 0.5 : 1, borderColor: first === x ? 'rgba(255, 234, 2, 1)' : 'black' }}
                         onPress={() => handlePress(x)}
                         disabled={disableCheck(x)}
                     >
-                        <Image source={imageSet[x.img]} style={styles.image} resizeMode='contain' />
+                        <Image source={imageSet[x.img]} style={styles.image} resizeMode='stretch' />
                     </Pressable>
                 ))}
             </ScrollView>
@@ -128,12 +89,11 @@ const styles = StyleSheet.create({
         width: 48,
         aspectRatio: '230/360',
         borderWidth: 2,
-        borderRadius: 2
+        borderRadius: 3
     },
     image: {
         width: "100%",
         height: "100%",
-        borderRadius: 2
     },
     buttons: {
         aspectRatio: '1/1',
