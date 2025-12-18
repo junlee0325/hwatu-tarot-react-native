@@ -1,109 +1,178 @@
-import Container from '@/components/container';
-import Controls from '@/components/controls';
-import FourStack from '@/components/fourStack';
-import Header from '@/components/header';
-import InfoPop from '@/components/infoPop';
-import PlayArea from '@/components/playArea';
-import { useEffect, useState } from 'react';
-import { ImageBackground, StyleSheet, View } from 'react-native';
-import { cardImgs } from '../assets/images';
+import BoxCheckOverlay from "@/components/boxCheckOverlay";
+import Container from "@/components/container";
+import Controls from "@/components/controls";
+import FourStack from "@/components/fourStack";
+import Header from "@/components/header";
+import InfoPop from "@/components/infoPop";
+import PlayArea from "@/components/playArea";
+import ResultsOverlay from "@/components/resultsOverlay";
+import { useEffect, useState } from "react";
+import { Alert, ImageBackground, StyleSheet, View } from "react-native";
+import { cardImgs } from "../assets/images";
 
 interface Card {
-  month: string;  // e.g., "Jan", "Feb", etc.
+  month: string; // e.g., "Jan", "Feb", etc.
   rank: string;
-  id: string;     // optional, unique identifier
-  img: string
+  id: string; // optional, unique identifier
+  img: string;
+  rotation: number;
+  title1: string;
+  title2: string;
+  meaning: string;
 }
 
 const months = [
-  'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-  'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
 ];
 
-const ranks = ['A', 'B', 'C', 'D'];
+const ranks = ["A", "B", "C", "D"];
 
-const deck: Card[] = months.flatMap(month =>
-  ranks.map(rank => ({
+const titles1: Record<string, string> = {
+  jan: "January",
+  feb: "February",
+  mar: "March",
+  apr: "April",
+  may: "May",
+  jun: "June",
+  jul: "July",
+  aug: "August",
+  sep: "September",
+  oct: "October",
+  nov: "November",
+  dec: "December",
+};
+
+const titles2: Record<string, string> = {
+  jan: "Pine 솔",
+  feb: "Plum Blossom 매화",
+  mar: "Cherry Blossom 벚꽃",
+  apr: "Wisteria 흑싸리",
+  may: "Iris 난초",
+  jun: "Peony 목단",
+  jul: "Bush Clover 홍싸리",
+  aug: "Empty Hill 공산",
+  sep: "Chrysanthemum 국화",
+  oct: "Maple 단풍",
+  nov: "Paulownia 오동",
+  dec: "Rain 비",
+};
+
+const meanings: Record<string, string> = {
+  jan: "Receive news or tidings",
+  feb: "Meet your beloved",
+  mar: "Set out on a brief journey",
+  apr: "Experience a minor conflict",
+  may: "Dine out or meet with someone",
+  jun: "Welcome a happy occasion",
+  jul: "Stumble upon an unexpected windfall",
+  aug: "Acquire money",
+  sep: "Encounter an occasion for a drink",
+  oct: "Face worries or concerns",
+  nov: "Spend money or come across an expense",
+  dec: "Have a visitor",
+};
+
+const getRandomInt = () => {
+  const randomNumber = Math.random() * 3;
+  const sign = Math.random() < 0.5 ? -1 : 1; // Randomly choose -1 or 1
+  return randomNumber * sign;
+};
+
+const deck: Card[] = months.flatMap((month) =>
+  ranks.map((rank) => ({
     month,
     rank,
     id: `${month}${rank}`, // unique id
-    img: `${month}${rank}`
+    img: `${month}${rank}`,
+    rotation: getRandomInt(),
+    title1: titles1[month],
+    title2: titles2[month],
+    meaning: meanings[month],
   }))
 );
 
 export default function HomeScreen() {
-  const [shuffled, setShuffled] = useState<Card[]>([])
-  const [mixed, setMixed] = useState(false)
-  const [placed, setPlaced] = useState(false)
+  const [shuffled, setShuffled] = useState<Card[]>([]);
+
+  const [placed, setPlaced] = useState(false);
 
   const [visible, setVisible] = useState(false);
 
-  const [imageSet, setImageSet] = useState(cardImgs)
+  const [imageSet, setImageSet] = useState(cardImgs);
 
-  const [first, setFirst] = useState<Card | null>(null)
-  const [second, setSecond] = useState<Card | null>(null)
+  const [first, setFirst] = useState<Card | null>(null);
+  const [second, setSecond] = useState<Card | null>(null);
 
-  const [firstFour, setFirstFour] = useState<Card[]>([])
-  const [secondFour, setSecondFour] = useState<Card[]>([])
-  const [thirdFour, setThirdFour] = useState<Card[]>([])
-  const [fourthFour, setFourthFour] = useState<Card[]>([])
+  const [firstFour, setFirstFour] = useState<Card[]>([]);
+  const [secondFour, setSecondFour] = useState<Card[]>([]);
+  const [thirdFour, setThirdFour] = useState<Card[]>([]);
+  const [fourthFour, setFourthFour] = useState<Card[]>([]);
 
-  const [remaining, setRemaining] = useState<Card[]>([])
+  const [remaining, setRemaining] = useState<Card[]>([]);
+  const [faceUps, setFaceUps] = useState<Card[]>([]);
 
-
-
-  useEffect(() => {
-    // Fisher-Yates shuffle
-    const shuffle = (array: Card[]) => {
-      const copy = [...array];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    };
-
-    setShuffled(shuffle(deck))
-    setMixed(true)
-  }, [])
-
-  useEffect(() => {
-    if (!placed) {
-      if (mixed) {
-        setFirstFour(shuffled.slice(0, 4))
-        setSecondFour(shuffled.slice(4, 8))
-        setThirdFour(shuffled.slice(8, 12))
-        setFourthFour(shuffled.slice(12, 16))
-        setRemaining(shuffled.slice(16))
-
-        setPlaced(true)
-      }
+  // Fisher-Yates shuffle
+  const shuffle = (array: Card[]) => {
+    const copy = [...array];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
     }
-  }, [mixed])
+    return copy;
+  };
 
-  const [faceUps, setFaceUps] = useState<Card[]>([])
+  useEffect(() => {
+    setShuffled(shuffle(deck));
+  }, []);
 
+  useEffect(() => {
+    if (!placed && shuffled.length > 0) {
+      setFirstFour(shuffled.slice(0, 4));
+      setSecondFour(shuffled.slice(4, 8));
+      setThirdFour(shuffled.slice(8, 12));
+      setFourthFour(shuffled.slice(12, 16));
+      setRemaining(shuffled.slice(16));
+
+      setPlaced(true);
+    }
+  }, [shuffled, placed]);
+
+  // Draw
   const handleDraw = () => {
     if (remaining.length === 0) {
-      setRemaining(faceUps)
-      setFaceUps([])
+      checkImpossible();
+      setRemaining([...faceUps].reverse());
+      setFaceUps([]);
     } else {
-      const copyRemaining = [...remaining]
-      const drawn = copyRemaining.shift()
+      const copyRemaining = [...remaining];
+      const drawn = copyRemaining.pop();
 
       if (drawn) {
-        setFaceUps([...faceUps, drawn])
-        setRemaining(copyRemaining)
+        setFaceUps([...faceUps, drawn]);
+        setRemaining(copyRemaining);
       }
     }
-  }
+  };
 
+  // Target Box and Match
+  const [boxOne, setBoxOne] = useState<Card[]>([]);
+  const [boxTwo, setBoxTwo] = useState<Card[]>([]);
+  const [boxThree, setBoxThree] = useState<Card[]>([]);
+  const [boxFour, setBoxFour] = useState<Card[]>([]);
+  const [boxTarget, setBoxTarget] = useState<number>(0);
 
-  const [boxOne, setBoxOne] = useState<Card[]>([])
-  const [boxTwo, setBoxTwo] = useState<Card[]>([])
-  const [boxThree, setBoxThree] = useState<Card[]>([])
-  const [boxFour, setBoxFour] = useState<Card[]>([])
-  const [boxTarget, setBoxTarget] = useState<number>(0)
+  const boxSetters = [setBoxOne, setBoxTwo, setBoxThree, setBoxFour];
 
   useEffect(() => {
     const newMatched: Card[] = [];
@@ -113,52 +182,150 @@ export default function HomeScreen() {
       { arr: secondFour, setArr: setSecondFour },
       { arr: thirdFour, setArr: setThirdFour },
       { arr: fourthFour, setArr: setFourthFour },
-      { arr: faceUps, setArr: setFaceUps }
+      { arr: faceUps, setArr: setFaceUps },
     ];
 
     if (first && second) {
       if (first !== second && first.month === second.month) {
-
-        arrays.forEach(x => {
+        arrays.forEach((x) => {
           const kept: Card[] = [];
-          x.arr.forEach(card => {
-            if (card === first || card === second) {
-              newMatched.push(card);
+          x.arr.forEach((x) => {
+            if (x === first || x === second) {
+              newMatched.push(x);
             } else {
-              kept.push(card);
+              kept.push(x);
             }
           });
           x.setArr(kept);
         });
 
-        setFirst(null)
-        setSecond(null)
+        setFirst(null);
+        setSecond(null);
 
-        if (boxTarget === 0) { setBoxOne(prev => [...prev, ...newMatched]) }
-        if (boxTarget === 1) { setBoxTwo(prev => [...prev, ...newMatched]) }
-        if (boxTarget === 2) { setBoxThree(prev => [...prev, ...newMatched]) }
-        if (boxTarget === 3) { setBoxFour(prev => [...prev, ...newMatched]) }
+        boxSetters[boxTarget]((prev) => [...prev, ...newMatched]);
 
-        setBoxTarget(prev => (prev + 1) % 4)
+        setBoxTarget((prev) => (prev + 1) % 4);
 
-        console.log('matched:', newMatched);
-      }
-      else {
-        setFirst(null)
-        setSecond(null)
-        console.log("reset")
+        console.log("matched:", newMatched);
+      } else {
+        setFirst(null);
+        setSecond(null);
+        console.log("reset");
       }
     }
-  }, [second])
+  }, [second]);
 
+  // Reset
+  const handleReset = () => {
+    setPlaced(false);
+    setFirstFour([]);
+    setSecondFour([]);
+    setThirdFour([]);
+    setFourthFour([]);
+    setRemaining([]);
+    setFaceUps([]);
+    setBoxOne([]);
+    setBoxTwo([]);
+    setBoxThree([]);
+    setBoxFour([]);
+    setBoxTarget(0);
+    setFirst(null);
+    setSecond(null);
+
+    setShuffled(shuffle(deck));
+  };
+
+  // Box check
+  const [openCheckBox, setOpenCheckBox] = useState(false);
+  const [selectedBox, setSelectedBox] = useState<Card[]>([]);
+
+  // Results
+  const [openResults, setOpenResults] = useState(false);
+
+  useEffect(() => {
+    if (boxFour.length === 12) {
+      setOpenResults(true);
+    }
+  }, [boxFour]);
+
+  // Impossible Deck
+  // 3 Steps:
+  // Check match
+  const checkImpossible = () => {
+    const lastFourCombined: (Card | undefined)[] = [
+      firstFour.at(-1),
+      secondFour.at(-1),
+      thirdFour.at(-1),
+      fourthFour.at(-1),
+    ];
+
+    const validFourCards: Card[] = lastFourCombined.filter(
+      (x): x is Card => x !== undefined
+    );
+
+    const validFourMonths = validFourCards.map((x) => x.month);
+
+    const validFourMonthsUnique =
+      new Set(validFourMonths).size === validFourMonths.length;
+
+    const faceUpsMonths = faceUps.map((x) => x.month);
+
+    if (validFourMonths.length !== 0 && validFourMonthsUnique) {
+      const hasMatch = validFourMonths.some((x) =>
+        faceUpsMonths.some((y) => x === y)
+      );
+
+      if (hasMatch) {
+        return;
+      } else {
+        Alert.alert("Impossible Deck. Try Again", "", [
+          {
+            text: "Ok",
+          },
+        ]);
+      }
+    }
+  };
   return (
-    <ImageBackground source={require('../assets/background/fabric2.webp')} style={styles.whole} resizeMode='repeat'>
+    <ImageBackground
+      source={require("../assets/background/fabric2.webp")}
+      style={styles.whole}
+      resizeMode="cover"
+    >
       <Header />
       <View style={styles.fourContainer}>
-        <Container pairs={boxOne} imageSet={imageSet} boxTarget={boxTarget} index={0} />
-        <Container pairs={boxTwo} imageSet={imageSet} boxTarget={boxTarget} index={1} />
-        <Container pairs={boxThree} imageSet={imageSet} boxTarget={boxTarget} index={2} />
-        <Container pairs={boxFour} imageSet={imageSet} boxTarget={boxTarget} index={3} />
+        <Container
+          pairs={boxOne}
+          imageSet={imageSet}
+          boxTarget={boxTarget}
+          index={0}
+          setOpenCheckBox={setOpenCheckBox}
+          setSelectedBox={setSelectedBox}
+        />
+        <Container
+          pairs={boxTwo}
+          imageSet={imageSet}
+          boxTarget={boxTarget}
+          index={1}
+          setOpenCheckBox={setOpenCheckBox}
+          setSelectedBox={setSelectedBox}
+        />
+        <Container
+          pairs={boxThree}
+          imageSet={imageSet}
+          boxTarget={boxTarget}
+          index={2}
+          setOpenCheckBox={setOpenCheckBox}
+          setSelectedBox={setSelectedBox}
+        />
+        <Container
+          pairs={boxFour}
+          imageSet={imageSet}
+          boxTarget={boxTarget}
+          index={3}
+          setOpenCheckBox={setOpenCheckBox}
+          setSelectedBox={setSelectedBox}
+        />
       </View>
       <View style={styles.fourStack}>
         <FourStack
@@ -168,7 +335,8 @@ export default function HomeScreen() {
           first={first}
           setFirst={setFirst}
           second={second}
-          setSecond={setSecond} />
+          setSecond={setSecond}
+        />
         <FourStack
           fourCards={secondFour}
           updateFourCards={setSecondFour}
@@ -176,7 +344,8 @@ export default function HomeScreen() {
           first={first}
           setFirst={setFirst}
           second={second}
-          setSecond={setSecond} />
+          setSecond={setSecond}
+        />
         <FourStack
           fourCards={thirdFour}
           updateFourCards={setThirdFour}
@@ -184,7 +353,8 @@ export default function HomeScreen() {
           first={first}
           setFirst={setFirst}
           second={second}
-          setSecond={setSecond} />
+          setSecond={setSecond}
+        />
         <FourStack
           fourCards={fourthFour}
           updateFourCards={setFourthFour}
@@ -192,7 +362,8 @@ export default function HomeScreen() {
           first={first}
           setFirst={setFirst}
           second={second}
-          setSecond={setSecond} />
+          setSecond={setSecond}
+        />
       </View>
       <PlayArea
         remaining={remaining}
@@ -204,39 +375,61 @@ export default function HomeScreen() {
         second={second}
         setSecond={setSecond}
         faceUps={faceUps}
-        setFaceUps={setFaceUps} />
-      <Controls handleDraw={handleDraw} setVisible={setVisible} remaining={remaining}/>
+        setFaceUps={setFaceUps}
+      />
+      <Controls
+        handleDraw={handleDraw}
+        setVisible={setVisible}
+        remaining={remaining}
+        handleReset={handleReset}
+        first={first}
+      />
       <InfoPop visible={visible} setVisible={setVisible} />
+      {openCheckBox && (
+        <BoxCheckOverlay
+          setOpenCheckBox={setOpenCheckBox}
+          selectedBox={selectedBox}
+          imageSet={imageSet}
+        />
+      )}
+      {openResults && (
+        <ResultsOverlay
+          setOpenResults={setOpenResults}
+          boxOne={boxOne}
+          boxTwo={boxTwo}
+          boxThree={boxThree}
+          boxFour={boxFour}
+          imageSet={imageSet}
+        />
+      )}
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   whole: {
-    display: 'flex',
-    height: '100%',
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'green',
-    overflow: 'hidden',
+    display: "flex",
+    height: "100%",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+    overflow: "hidden",
   },
   fourContainer: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    justifyContent: 'space-around'
+    width: "100%",
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    justifyContent: "space-evenly",
   },
   fourStack: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    justifyContent: 'space-around',
-    height: 120,
+    width: "100%",
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    justifyContent: "space-evenly",
+    height: 150,
     marginBottom: 5,
   },
-
 });

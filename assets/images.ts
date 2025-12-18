@@ -1,4 +1,4 @@
-export const cardImgs = {
+export const cardImgs: any = {
   // January
   'janA': require('../assets/cardImgs/janA.webp'),
   'janB': require('../assets/cardImgs/janB.webp'),
