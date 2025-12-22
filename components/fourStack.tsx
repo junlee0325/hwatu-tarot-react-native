@@ -1,6 +1,7 @@
+import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
-import React from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import React, { useEffect } from "react";
+import { Dimensions, Image, Pressable, StyleSheet, View } from "react-native";
 
 interface Card {
   month: string; // e.g., "Jan", "Feb", etc.
@@ -31,28 +32,44 @@ const FourStack = ({
   second,
   setSecond,
 }: Prop) => {
+  // Sounds
+  //////////////////////
+  const plasticPlayer = useAudioPlayer(require("../assets/plastic.mp3"));
+
+  useEffect(() => {
+    plasticPlayer.volume = 0.1;
+  }, []);
+
+  const playSfx = (player: any) => {
+    player.seekTo(0);
+    player.play();
+    player.seekTo(0);
+  };
+  //////////////////////////
+
+  const { width: vw } = Dimensions.get("window");
+
   const handlePress = (card: Card) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Haptics.selectionAsync();
 
     if (first === null) {
       setFirst(card);
-      console.log("heh");
+      playSfx(plasticPlayer);
+      console.log("first card selected");
     }
 
     if (first !== null && card !== first && second === null) {
       setSecond(card);
-      console.log("hi");
+      console.log("initial match");
     }
 
     if (first !== null && card === first) {
       setFirst(null);
       setSecond(null);
-      console.log("no");
+
+      console.log("same card");
     }
   };
-
-
 
   return (
     <View
@@ -71,6 +88,7 @@ const FourStack = ({
             key={i}
             style={{
               ...styles.imageBox,
+              width: vw * 0.15,
               top: 18 * i,
               borderColor: first === x ? "indianred" : "indianred",
               borderWidth:
@@ -90,10 +108,18 @@ const FourStack = ({
                       // { translateX: rotateInt[i] },
                       { rotate: `${x.rotation * -1}deg` },
                     ],
-              boxShadow: x === fourCards[fourCards.length - 1] ? first === x ? "1px 1px 15px yellow" : "2px 2px 2px black" : "1px 1px 2px black",
+              boxShadow:
+                x === fourCards[fourCards.length - 1]
+                  ? first === x
+                    ? "1px 1px 10px 1px yellow"
+                    : "2px 2px 2px black"
+                  : "1px 1px 2px black",
               zIndex: first === x ? 10 : 1,
             }}
-            onPressIn={() => handlePress(x)}
+            onPressIn={() =>
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            }
+            onPressOut={() => handlePress(x)}
             disabled={x === fourCards[fourCards.length - 1] ? false : true}
           >
             <Image
@@ -116,7 +142,6 @@ export default FourStack;
 
 const styles = StyleSheet.create({
   imageBox: {
-    width: 60,
     aspectRatio: "230/360",
     position: "absolute",
     borderRadius: 3,

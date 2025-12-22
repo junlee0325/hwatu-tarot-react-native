@@ -1,6 +1,8 @@
+import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Dimensions,
   Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -46,6 +48,23 @@ const PlayArea = ({
   faceUps,
   setFaceUps,
 }: Prop) => {
+  // Sounds
+  //////////////////////
+  const plasticPlayer = useAudioPlayer(require("../assets/plastic.mp3"));
+
+  useEffect(() => {
+    plasticPlayer.volume = 0.1;
+  }, []);
+
+  const playSfx = (player: any) => {
+    player.seekTo(0);
+    player.play();
+    player.seekTo(0);
+  };
+  //////////////////////////
+
+  const { width: vw } = Dimensions.get("window");
+
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -66,23 +85,25 @@ const PlayArea = ({
   };
 
   const handlePress = (card: Card) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Haptics.selectionAsync();
 
     if (first === null) {
       setFirst(card);
-      console.log("heh");
+      playSfx(plasticPlayer);
+      console.log("first card selected");
     }
 
     if (first !== null && card !== first && second === null) {
       setSecond(card);
-      console.log("hi");
+
+      console.log("initial match");
     }
 
     if (first !== null && card === first) {
       setFirst(null);
       setSecond(null);
-      console.log("no");
+
+      console.log("same card");
     }
   };
 
@@ -148,6 +169,7 @@ const PlayArea = ({
               key={i}
               style={{
                 ...styles.imageBox,
+                width: vw * 0.15,
                 borderColor: first === x ? "indianred" : "indianred",
                 borderWidth: first === x ? 1 : 1,
                 transform: [
@@ -157,10 +179,13 @@ const PlayArea = ({
                 ],
                 opacity: disableCheck(x) ? 0.5 : 1,
                 boxShadow:
-                  first === x ? "1px 1px 10px yellow" : "2px 2px 2px black",
+                  first === x ? "1px 1px 10px 1px yellow" : "2px 2px 2px black",
                 zIndex: first === x ? 10 : 1,
               }}
-              onPressIn={() => handlePress(x)}
+              onPressIn={() =>
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              }
+              onPressOut={() => handlePress(x)}
               disabled={disableCheck(x)}
             >
               <Image
@@ -181,6 +206,7 @@ const PlayArea = ({
           <Pressable
             style={{
               ...styles.imageBox,
+              width: vw * 0.15,
               height: "auto",
               borderColor: first === faceUps[0] ? "indianred" : "indianred",
               borderWidth: first === faceUps[0] ? 1 : 1,
@@ -191,10 +217,13 @@ const PlayArea = ({
               ],
               boxShadow:
                 first === faceUps[0]
-                  ? "1px 1px 10px yellow"
+                  ? "1px 1px 10px 1px yellow"
                   : "2px 2px 2px black",
             }}
-            onPressIn={() => handlePress(faceUps[0])}
+            onPressIn={() =>
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            }
+            onPressOut={() => handlePress(faceUps[0])}
             disabled={disableCheck(faceUps[0])}
           >
             <Image
@@ -213,7 +242,6 @@ export default PlayArea;
 
 const styles = StyleSheet.create({
   imageBox: {
-    width: 60,
     aspectRatio: "230/360",
     borderRadius: 3,
     backgroundColor: "rgba(188, 26, 8, 1)",

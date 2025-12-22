@@ -10,7 +10,7 @@ const InfoBlock = () => {
             <Text>Jan | 1월</Text>
             <Text>Pine | 솔</Text>
         </View>
-        <View>Receive news or tidings</View>
+        <View></View>
       </View>
     </View>
   )

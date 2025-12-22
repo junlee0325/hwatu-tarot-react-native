@@ -1,9 +1,11 @@
+import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
+  Dimensions,
   Image,
   Pressable,
   StyleSheet,
@@ -38,6 +40,79 @@ const Controls = ({
   handleReset,
   first,
 }: Prop) => {
+  // Sounds
+  //////////////////////
+  // const plasticPlayer = useAudioPlayer(require("../assets/plastic.mp3"));
+  // const swishPlayer = useAudioPlayer(require("../assets/swish.mp3"));
+  // const clickPlayer = useAudioPlayer(require("../assets/click.mp3"));
+
+  // useEffect(() => {
+  //   plasticPlayer.volume = 0.1;
+  //   swishPlayer.volume = 0.1;
+  //   clickPlayer.volume = 1;
+  // }, []);
+
+  // const playSfx = (player: any) => {
+  //   player.seekTo(0);
+  //   player.play();
+  //   player.seekTo(0);
+  // };
+  //////////////////////////
+
+  // Sounds
+  //////////////////////
+  // Create a pool of 3 swish players
+  const swishPlayers = [
+    useAudioPlayer(require("../assets/swish.mp3")),
+    useAudioPlayer(require("../assets/swish.mp3")),
+    useAudioPlayer(require("../assets/swish.mp3")),
+    useAudioPlayer(require("../assets/swish.mp3")),
+  ];
+
+  const clickPlayers = [
+    useAudioPlayer(require("../assets/click.mp3")),
+    useAudioPlayer(require("../assets/click.mp3")),
+    useAudioPlayer(require("../assets/click.mp3")),
+    useAudioPlayer(require("../assets/click.mp3")),
+  ];
+
+  let swishIndex = 0;
+
+  let clickIndex = 0;
+
+  // Set volume once after creation
+  useEffect(() => {
+    swishPlayers.forEach((player) => {
+      player.volume = 0.1;
+    });
+  }, []);
+
+  useEffect(() => {
+    clickPlayers.forEach((player) => {
+      player.volume = 0.9;
+    });
+  }, []);
+
+  // Function to play smack sound (spam-safe)
+  const playSwish = () => {
+    const player = swishPlayers[swishIndex];
+    player.seekTo(0);
+    player.play();
+
+    swishIndex = (swishIndex + 1) % swishPlayers.length;
+  };
+
+  const playClick = () => {
+    const player = clickPlayers[clickIndex];
+    player.seekTo(0);
+    player.play();
+
+    clickIndex = (clickIndex + 1) % clickPlayers.length;
+  };
+  //////////////////////////
+
+  const { width: vw } = Dimensions.get("window");
+
   const [showCycle, setShowCycle] = useState(false);
 
   const [opacity, setOpacity] = useState(1);
@@ -55,38 +130,77 @@ const Controls = ({
 
   const translateY = useRef(new Animated.Value(0)).current;
 
+  // const handlePressIn = () => {
+  //   if (remaining.length === 0) return;
+
+  //   if (first === null) {
+  //     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  //     // Haptics.selectionAsync();
+
+  //     translateY.setValue(0);
+  //     setOpacity(1);
+
+  //     Animated.timing(translateY, {
+  //       toValue: -20, // move up
+  //       duration: 200,
+  //       useNativeDriver: true,
+  //     }).start();
+  //   }
+  // };
   const handlePressIn = () => {
     if (remaining.length === 0) return;
+    if (first !== null) return;
 
-    if (first === null) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      // Haptics.selectionAsync();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // playSfx(plasticPlayer);
+    playSwish();
 
-      translateY.setValue(0);
-      setOpacity(1);
+    translateY.setValue(0);
+    setOpacity(1);
 
-      Animated.timing(translateY, {
-        toValue: -20, // move up
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    }
+    Animated.timing(translateY, {
+      toValue: -20,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const handlePressOut = () => {
-    if (first === null) {
-      setShowCycle(true);
+  // const handlePressOut = () => {
+  //   if (first === null) {
+  //     setShowCycle(true);
 
-      Animated.timing(translateY, {
-        toValue: -120, // move up
-        duration: 100,
-        useNativeDriver: true,
-      }).start(() => {
-        setOpacity(0); // fade out last card
-        handleDraw();
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      });
-    }
+  //     Animated.timing(translateY, {
+  //       toValue: -120, // move up
+  //       duration: 100,
+  //       useNativeDriver: true,
+  //     }).start(() => {
+  //       setOpacity(0); // fade out last card
+  //       handleDraw();
+  //       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  //     });
+  //   }
+  // };
+  const handlePressOut = () => {
+    if (first !== null) return;
+
+    setShowCycle(true);
+    // playSfx(swishPlayer);
+
+    Animated.timing(translateY, {
+      toValue: -120,
+      duration: 100,
+      useNativeDriver: true,
+    }).start(() => {
+      setOpacity(0);
+      handleDraw();
+
+      setTimeout(() => {
+        // playSfx(clickPlayer)
+        playClick();
+      }, 80);
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    });
   };
 
   const handleResetPress = () => {
@@ -110,8 +224,7 @@ const Controls = ({
 
   return (
     <View style={styles.bottomBar}>
-      <Link
-        href="/modal"
+      <View
         style={{
           flex: 1,
           display: "flex",
@@ -122,17 +235,16 @@ const Controls = ({
           height: 50,
         }}
       >
-        <Text
+        <Link
+          href="/modal"
           style={{
             color: "rgba(255, 255, 255, 0.75)",
             fontWeight: "600",
-            textAlign: "center",
-            backgroundColor: "blue",
           }}
         >
           Info
-        </Text>
-      </Link>
+        </Link>
+      </View>
       <View
         style={{
           flex: 1,
@@ -164,15 +276,16 @@ const Controls = ({
                 key={i}
                 style={{
                   ...styles.imageBox,
+                  width: vw * 0.15,
                   left: "50%",
                   top: "50%",
                   transform: [
                     { translateX: -30 },
-                    { translateY: -0.3 * i - 50 },
+                    { translateY: -0.1 * i - 50 },
                     ...(x === remaining[remaining.length - 1]
                       ? [{ translateY }]
                       : []),
-                    { rotate: `${x.rotation * 2}deg` },
+                    { rotate: `${x.rotation * 1.5}deg` },
                   ],
                   opacity: x === remaining[remaining.length - 1] ? opacity : 1,
                 }}
@@ -202,8 +315,8 @@ const Controls = ({
               ...styles.drawButton,
               borderWidth: 2,
               borderColor: cycleBorder
-                ? "rgba(255, 234, 2, 1)"
-                : "rgba(255, 255, 255, 0.75)",
+                ? "rgba(255, 255, 255, 1)"
+                : "rgba(255, 255, 255, 0.5)",
               borderRadius: "25%",
               aspectRatio: 1,
               borderStyle: "dashed",
@@ -212,8 +325,8 @@ const Controls = ({
             <Text
               style={{
                 color: cycleBorder
-                  ? "rgba(255, 234, 2, 1)"
-                  : "rgba(255, 255, 255, 0.75)",
+                  ? "rgba(255, 255, 255, 1)"
+                  : "rgba(255, 255, 255, 0.5)",
                 fontWeight: "600",
                 fontSize: 24,
                 textAlign: "center",
@@ -273,7 +386,6 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   imageBox: {
-    width: 60,
     height: "auto",
     aspectRatio: "230/360",
     position: "absolute",
@@ -281,6 +393,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     borderColor: "indianred",
     backgroundColor: "rgba(188, 26, 8, 1)",
+    boxShadow: "1px 1px 2px black",
   },
   image: {
     width: "100%",

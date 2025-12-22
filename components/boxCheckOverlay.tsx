@@ -1,12 +1,13 @@
 import * as Haptics from "expo-haptics";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Image,
   Pressable,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 
 interface Card {
@@ -27,22 +28,42 @@ type Props = {
 };
 
 const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
+  const { width: vw} = Dimensions.get('window');
+
   const [scale] = useState(new Animated.Value(1));
-
-  const handlePressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.75, // scale down 95%
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 3,
-      useNativeDriver: true,
-    }).start();
-  };
+  const [opacity] = useState(new Animated.Value(0));
+  
+      useEffect(() => {
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }, []);
+  
+    const handlePressIn = () => {
+      Animated.spring(scale, {
+        toValue: 0.75,
+        useNativeDriver: true,
+      }).start();
+    };
+  
+    const handlePressOut = () => {
+      Animated.spring(scale, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }).start();
+    };
+  
+    const handleClose = () => {
+      Haptics.selectionAsync();
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setOpenCheckBox(false));
+    };
 
   const monthCounts = selectedBox.reduce((acc, card) => {
     acc[card.month] = (acc[card.month] || 0) + 1;
@@ -50,7 +71,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
   }, {} as Record<string, number>);
 
   return (
-    <View
+    <Animated.View
       style={{
         position: "absolute",
         width: "100%",
@@ -60,6 +81,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        opacity
       }}
     >
       <View
@@ -78,6 +100,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
         <View
           style={{
             width: "100%",
+            display: "flex",
             flexDirection: "row",
             flexWrap: "wrap",
             justifyContent: "center",
@@ -88,6 +111,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
             boxShadow: "inset 1px 1px 4px black",
             paddingVertical: 5,
             borderRadius: 8,
+            paddingHorizontal: 12
           }}
         >
           {selectedBox.length > 0 ? (
@@ -96,7 +120,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
               return (
                 <View
                   style={{
-                    width: hasFour ? 50 : 40,
+                    width: hasFour ? vw * 0.11 : vw * 0.09,
                     aspectRatio: 230 / 360,
                     borderRadius: 2,
                     transform: [{ rotate: `${card.rotation}deg` }],
@@ -131,12 +155,9 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
 
         <View style={{ height: "30%" }}>
           <Pressable
-            onPress={() => {
-              Haptics.selectionAsync();
-              setOpenCheckBox(false);
-            }}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
+            onPress={() => handleClose()}
+            onPressIn={() => handlePressIn()}
+            onPressOut={() => handlePressOut()}
           >
             <Animated.View
               style={{
@@ -153,7 +174,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
           </Pressable>
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

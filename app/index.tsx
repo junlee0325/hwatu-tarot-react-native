@@ -6,6 +6,9 @@ import Header from "@/components/header";
 import InfoPop from "@/components/infoPop";
 import PlayArea from "@/components/playArea";
 import ResultsOverlay from "@/components/resultsOverlay";
+import { Asset } from "expo-asset";
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
 import { Alert, ImageBackground, StyleSheet, View } from "react-native";
 import { cardImgs } from "../assets/images";
@@ -103,11 +106,57 @@ const deck: Card[] = months.flatMap((month) =>
 );
 
 export default function HomeScreen() {
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+
+  // Sounds
+  //////////////////////
+  // Create a pool of 3 smack players
+  const smackPlayers = [
+    useAudioPlayer(require("../assets/smack.mp3")),
+    useAudioPlayer(require("../assets/smack.mp3")),
+    useAudioPlayer(require("../assets/smack.mp3")),
+    useAudioPlayer(require("../assets/smack.mp3")),
+    useAudioPlayer(require("../assets/smack.mp3")),
+  ];
+
+  let smackIndex = 0;
+
+  // Set volume once after creation
+  useEffect(() => {
+    const volume = 0.3; // desired volume
+    smackPlayers.forEach((player) => {
+      player.volume = volume;
+    });
+  }, []);
+
+  // Function to play smack sound (spam-safe)
+  const playSmack = () => {
+    const player = smackPlayers[smackIndex];
+    player.seekTo(0);
+    player.play();
+
+    smackIndex = (smackIndex + 1) % smackPlayers.length;
+  };
+  //////////////////////////
+
+  // Preload all card images
+  useEffect(() => {
+    const preloadImages = async () => {
+      const images = Object.values(cardImgs);
+      const cacheImages = images.map((img) =>
+        Asset.fromModule(img).downloadAsync()
+      );
+      await Promise.all(cacheImages);
+      setImagesLoaded(true);
+    };
+    preloadImages();
+  }, []);
+
   const [shuffled, setShuffled] = useState<Card[]>([]);
 
   const [placed, setPlaced] = useState(false);
 
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   const [imageSet, setImageSet] = useState(cardImgs);
 
@@ -206,11 +255,13 @@ export default function HomeScreen() {
 
         setBoxTarget((prev) => (prev + 1) % 4);
 
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        playSmack();
         console.log("matched:", newMatched);
       } else {
         setFirst(null);
         setSecond(null);
-        console.log("reset");
+        console.log("no match");
       }
     }
   }, [second]);
@@ -296,7 +347,7 @@ export default function HomeScreen() {
       <View style={styles.fourContainer}>
         <Container
           pairs={boxOne}
-          imageSet={imageSet}
+          imageSet={cardImgs}
           boxTarget={boxTarget}
           index={0}
           setOpenCheckBox={setOpenCheckBox}
@@ -304,7 +355,7 @@ export default function HomeScreen() {
         />
         <Container
           pairs={boxTwo}
-          imageSet={imageSet}
+          imageSet={cardImgs}
           boxTarget={boxTarget}
           index={1}
           setOpenCheckBox={setOpenCheckBox}
@@ -312,7 +363,7 @@ export default function HomeScreen() {
         />
         <Container
           pairs={boxThree}
-          imageSet={imageSet}
+          imageSet={cardImgs}
           boxTarget={boxTarget}
           index={2}
           setOpenCheckBox={setOpenCheckBox}
@@ -320,7 +371,7 @@ export default function HomeScreen() {
         />
         <Container
           pairs={boxFour}
-          imageSet={imageSet}
+          imageSet={cardImgs}
           boxTarget={boxTarget}
           index={3}
           setOpenCheckBox={setOpenCheckBox}
@@ -331,7 +382,7 @@ export default function HomeScreen() {
         <FourStack
           fourCards={firstFour}
           updateFourCards={setFirstFour}
-          imageSet={imageSet}
+          imageSet={cardImgs}
           first={first}
           setFirst={setFirst}
           second={second}
@@ -340,7 +391,7 @@ export default function HomeScreen() {
         <FourStack
           fourCards={secondFour}
           updateFourCards={setSecondFour}
-          imageSet={imageSet}
+          imageSet={cardImgs}
           first={first}
           setFirst={setFirst}
           second={second}
@@ -349,7 +400,7 @@ export default function HomeScreen() {
         <FourStack
           fourCards={thirdFour}
           updateFourCards={setThirdFour}
-          imageSet={imageSet}
+          imageSet={cardImgs}
           first={first}
           setFirst={setFirst}
           second={second}
@@ -358,7 +409,7 @@ export default function HomeScreen() {
         <FourStack
           fourCards={fourthFour}
           updateFourCards={setFourthFour}
-          imageSet={imageSet}
+          imageSet={cardImgs}
           first={first}
           setFirst={setFirst}
           second={second}
@@ -369,7 +420,7 @@ export default function HomeScreen() {
         remaining={remaining}
         setRemaining={setRemaining}
         setVisible={setVisible}
-        imageSet={imageSet}
+        imageSet={cardImgs}
         first={first}
         setFirst={setFirst}
         second={second}
@@ -389,7 +440,7 @@ export default function HomeScreen() {
         <BoxCheckOverlay
           setOpenCheckBox={setOpenCheckBox}
           selectedBox={selectedBox}
-          imageSet={imageSet}
+          imageSet={cardImgs}
         />
       )}
       {openResults && (
@@ -399,7 +450,7 @@ export default function HomeScreen() {
           boxTwo={boxTwo}
           boxThree={boxThree}
           boxFour={boxFour}
-          imageSet={imageSet}
+          imageSet={cardImgs}
         />
       )}
     </ImageBackground>
@@ -430,6 +481,6 @@ const styles = StyleSheet.create({
     flexWrap: "nowrap",
     justifyContent: "space-evenly",
     height: 150,
-    marginBottom: 5,
+    marginVertical: 2,
   },
 });

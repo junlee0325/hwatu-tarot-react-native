@@ -56,10 +56,19 @@ const ResultsOverlay = ({
   imageSet,
 }: Props) => {
   const [scale] = useState(new Animated.Value(1));
+  const [opacity] = useState(new Animated.Value(0));
+
+    useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 0.75, // scale down 95%
+      toValue: 0.75,
       useNativeDriver: true,
     }).start();
   };
@@ -70,6 +79,15 @@ const ResultsOverlay = ({
       friction: 3,
       useNativeDriver: true,
     }).start();
+  };
+
+  const handleClose = () => {
+    Haptics.selectionAsync();
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => setOpenResults(false));
   };
 
   const [boxes] = useState([boxOne, boxTwo, boxThree, boxFour]);
@@ -120,7 +138,7 @@ const ResultsOverlay = ({
   }, [boxFour]);
 
   return (
-    <View
+    <Animated.View
       style={{
         position: "absolute",
         width: "100%",
@@ -130,6 +148,7 @@ const ResultsOverlay = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        opacity
       }}
     >
       <View
@@ -307,12 +326,9 @@ const ResultsOverlay = ({
         </ScrollView>
         <View style={{ height: "10%" }}>
           <Pressable
-            onPress={() => {
-              Haptics.selectionAsync();
-              setOpenResults(false);
-            }}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
+            onPress={() => handleClose()}
+            onPressIn={() => handlePressIn()}
+            onPressOut={() => handlePressOut()}
           >
             <Animated.View
               style={{
@@ -329,7 +345,7 @@ const ResultsOverlay = ({
           </Pressable>
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

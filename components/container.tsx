@@ -1,6 +1,12 @@
-import * as Haptics from 'expo-haptics';
-import React, { useState } from "react";
-import { Animated, Image, Pressable, StyleSheet, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import React, { useEffect, useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  Image,
+  Pressable,
+  StyleSheet,
+} from "react-native";
 
 interface Card {
   month: string;
@@ -30,28 +36,48 @@ const Container = ({
   setOpenCheckBox,
   setSelectedBox,
 }: Prop) => {
+  const { width: vw } = Dimensions.get("window");
+
   const handleCheck = () => {
-    Haptics.selectionAsync()
+    Haptics.selectionAsync();
     setSelectedBox(pairs);
     setOpenCheckBox(true);
   };
 
   const [scale] = useState(new Animated.Value(1));
+  const [white, setWhite] = useState(false)
 
   const handlePressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.5, // scale down 95%
-      useNativeDriver: true,
-    }).start();
+    // Animated.spring(scale, {
+    //   toValue: 0.5, // scale down 95%
+    //   useNativeDriver: true,
+    // }).start();
+    setWhite(true)
   };
 
   const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 3,
-      useNativeDriver: true,
-    }).start();
+    // Animated.spring(scale, {
+    //   toValue: 1,
+    //   friction: 3,
+    //   useNativeDriver: true,
+    // }).start();
+    setWhite(false)
   };
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(scale, {
+        toValue: 1.8,
+        duration: 30, // very quick shrink
+        useNativeDriver: true,
+      }),
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 30, // quick bounce back
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [pairs]);
 
   return (
     <Pressable
@@ -70,30 +96,45 @@ const Container = ({
         style={{
           width: "100%",
           height: "100%",
-          borderWidth: 0,
-          borderStyle: "dotted",
+
+          borderStyle: "solid",
           borderRadius: 5,
-          borderColor:
+          boxShadow:
             boxTarget === index
-              ? "rgba(255, 255, 255, 1)"
+              ? "0px 0px 10px 1px white"
+              : "",
+          backgroundColor:
+            white
+              ? "rgba(255, 255, 255, 0.75)"
               : "rgba(255, 255, 255, 0.25)",
-          backgroundColor: boxTarget === index ? "rgba(255, 255, 255, .5)" : "rgba(255, 255, 255, 0.2)",
-          transform: [{ scale }],
+          
         }}
       >
         {pairs.length > 0 && (
-          <View style={{ position: "relative", width: "100%", height: "100%" }}>
+          <Animated.View
+            style={{ position: "relative", width: "100%", height: "100%" ,transform: [{ scale }]}}
+          >
             <Image
               source={imageSet[pairs[pairs.length - 1].img]}
-              style={{ ...styles.image, left: "40%", top: "45%" }}
+              style={{
+                ...styles.image,
+                width: vw * 0.06,
+                left: "45%",
+                top: "50%",
+              }}
               resizeMode="stretch"
             ></Image>
             <Image
               source={imageSet[pairs[pairs.length - 2].img]}
-              style={{ ...styles.image, left: "60%", top: "55%" }}
+              style={{
+                ...styles.image,
+                width: vw * 0.06,
+                left: "65%",
+                top: "65%",
+              }}
               resizeMode="stretch"
             ></Image>
-          </View>
+          </Animated.View>
         )}
       </Animated.View>
     </Pressable>
@@ -104,10 +145,8 @@ export default Container;
 
 const styles = StyleSheet.create({
   image: {
-    width: 30,
     height: "auto",
     aspectRatio: "230/360",
-    borderWidth: 1,
     borderRadius: 2,
     position: "absolute",
     transform: [{ translateX: -15 }, { translateY: (-30 * (360 / 230)) / 2 }],
