@@ -101,7 +101,7 @@ const Container = ({
           borderRadius: 5,
           boxShadow:
             boxTarget === index
-              ? "0px 0px 10px 1px white"
+              ? "0px 0px 5px 3px white"
               : "",
           backgroundColor:
             white

@@ -9,6 +9,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 
@@ -34,6 +35,8 @@ interface Prop {
   setSecond: (value: Card | null) => void;
   faceUps: Card[];
   setFaceUps: (value: Card[]) => void;
+  showLabels: Boolean;
+  mute: Boolean;
 }
 
 const PlayArea = ({
@@ -47,13 +50,15 @@ const PlayArea = ({
   setSecond,
   faceUps,
   setFaceUps,
+  showLabels,
+  mute,
 }: Prop) => {
   // Sounds
   //////////////////////
   const plasticPlayer = useAudioPlayer(require("../assets/plastic.mp3"));
 
   useEffect(() => {
-    plasticPlayer.volume = 0.1;
+    plasticPlayer.volume = 0.2;
   }, []);
 
   const playSfx = (player: any) => {
@@ -89,7 +94,9 @@ const PlayArea = ({
 
     if (first === null) {
       setFirst(card);
-      playSfx(plasticPlayer);
+      if (!mute) {
+        playSfx(plasticPlayer);
+      }
       console.log("first card selected");
     }
 
@@ -193,6 +200,33 @@ const PlayArea = ({
                 style={styles.image}
                 resizeMode="stretch"
               />
+              {showLabels && (
+                <View
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    left: 0,
+                    bottom: 0,
+                    marginVertical: 4,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.8)",
+                      color: "black",
+                      textAlign: "center",
+                      borderRadius: 2,
+                      fontSize: vw * 0.025,
+                      fontWeight: "bold",
+                      paddingHorizontal: 4,
+                    }}
+                  >
+                    {x.title1}
+                  </Text>
+                </View>
+              )}
             </Pressable>
           ))}
         </ScrollView>
@@ -231,6 +265,32 @@ const PlayArea = ({
               style={styles.image}
               resizeMode="stretch"
             />
+            {showLabels && (
+              <View
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  left: 0,
+                  bottom: 0,
+                  marginVertical: 4,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                    color: "black",
+                    textAlign: "center",
+                    borderRadius: 2,
+                    fontSize: vw * 0.025,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {faceUps[0].title1}
+                </Text>
+              </View>
+            )}
           </Pressable>
         </View>
       )}

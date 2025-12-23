@@ -67,6 +67,7 @@ const ResultsOverlay = ({
   }, []);
 
   const handlePressIn = () => {
+    Haptics.selectionAsync()
     Animated.spring(scale, {
       toValue: 0.75,
       useNativeDriver: true,
@@ -153,7 +154,7 @@ const ResultsOverlay = ({
     >
       <View
         style={{
-          backgroundColor: "#f3f3f3",
+          backgroundColor: "#cccccc",
           borderRadius: 10,
           padding: 10,
           width: "90%",
@@ -213,13 +214,13 @@ const ResultsOverlay = ({
                   <View
                     key={index}
                     style={{
-                      width: hasFour ? 25 : 20,
+                      width: "6%",
                       aspectRatio: 230 / 360,
                       borderRadius: 2,
                       transform: [{ rotate: `${card.rotation}deg` }],
-                      borderColor: "indianred",
+                      borderColor: hasFour ? "yellow" : "indianred",
                       borderWidth: 1,
-                      boxShadow: "1px 1px 2px black",
+                      boxShadow: "2px 2px 2px black",
                     }}
                   >
                     <Image
@@ -283,7 +284,7 @@ const ResultsOverlay = ({
                         { rotate: `${card.rotation}deg` },
                       ],
                       zIndex: 4 - index,
-                      boxShadow: "2px 2px 2px black",
+                      boxShadow: "3px 3px 4px black",
                     }}
                   >
                     <Image
@@ -315,8 +316,8 @@ const ResultsOverlay = ({
                     alignItems: "flex-end"
                   }}
                 >
+                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>{matches[i][1].title1}</Text>
                   <Text style={{ fontSize: 14, fontWeight: "bold" }}>{matches[i][1].title2}</Text>
-                  <Text style={{ fontSize: 10, fontWeight: "bold" }}>{matches[i][1].title1}</Text>
                 </View>
                 <View style={{width: "100%", height: 1, backgroundColor: "black"}}></View>
                 <Text style={{ fontSize: 14, paddingTop: 4 }}>{matches[i][1].meaning}</Text>

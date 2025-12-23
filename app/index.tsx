@@ -4,6 +4,7 @@ import Controls from "@/components/controls";
 import FourStack from "@/components/fourStack";
 import Header from "@/components/header";
 import InfoPop from "@/components/infoPop";
+import OptionsOverlay from "@/components/optionsOverlay";
 import PlayArea from "@/components/playArea";
 import ResultsOverlay from "@/components/resultsOverlay";
 import { Asset } from "expo-asset";
@@ -42,33 +43,33 @@ const months = [
 const ranks = ["A", "B", "C", "D"];
 
 const titles1: Record<string, string> = {
-  jan: "January",
-  feb: "February",
-  mar: "March",
-  apr: "April",
-  may: "May",
-  jun: "June",
-  jul: "July",
-  aug: "August",
-  sep: "September",
-  oct: "October",
-  nov: "November",
-  dec: "December",
+  jan: "Pine",
+  feb: "Plum",
+  mar: "Cherry Blossom",
+  apr: "Wisteria",
+  may: "Water Iris",
+  jun: "Peony",
+  jul: "Bush Clover",
+  aug: "Hill",
+  sep: "Mums",
+  oct: "Maple Leaves",
+  nov: "Empress Tree",
+  dec: "Rain",
 };
 
 const titles2: Record<string, string> = {
-  jan: "Pine 솔",
-  feb: "Plum Blossom 매화",
-  mar: "Cherry Blossom 벚꽃",
-  apr: "Wisteria 흑싸리",
-  may: "Iris 난초",
-  jun: "Peony 목단",
-  jul: "Bush Clover 홍싸리",
-  aug: "Empty Hill 공산",
-  sep: "Chrysanthemum 국화",
-  oct: "Maple 단풍",
-  nov: "Paulownia 오동",
-  dec: "Rain 비",
+  jan: "솔",
+  feb: "매조",
+  mar: "벚꽃",
+  apr: "흑싸리",
+  may: "난초",
+  jun: "모란",
+  jul: "홍싸리",
+  aug: "공산",
+  sep: "국화",
+  oct: "단풍",
+  nov: "오동",
+  dec: "비",
 };
 
 const meanings: Record<string, string> = {
@@ -123,7 +124,7 @@ export default function HomeScreen() {
 
   // Set volume once after creation
   useEffect(() => {
-    const volume = 0.3; // desired volume
+    const volume = 0.6; // desired volume
     smackPlayers.forEach((player) => {
       player.volume = volume;
     });
@@ -137,6 +138,7 @@ export default function HomeScreen() {
 
     smackIndex = (smackIndex + 1) % smackPlayers.length;
   };
+  
   //////////////////////////
 
   // Preload all card images
@@ -158,7 +160,9 @@ export default function HomeScreen() {
 
   const [visible, setVisible] = useState(true);
 
-  const [imageSet, setImageSet] = useState(cardImgs);
+  const [showLabels, setShowLabels] = useState(false);
+  const [mute, setMute] = useState(false);
+  const [openOptions, setOpenOptions] = useState(false);
 
   const [first, setFirst] = useState<Card | null>(null);
   const [second, setSecond] = useState<Card | null>(null);
@@ -256,7 +260,11 @@ export default function HomeScreen() {
         setBoxTarget((prev) => (prev + 1) % 4);
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        playSmack();
+
+        if (!mute) {
+          playSmack();
+        }
+
         console.log("matched:", newMatched);
       } else {
         setFirst(null);
@@ -387,6 +395,8 @@ export default function HomeScreen() {
           setFirst={setFirst}
           second={second}
           setSecond={setSecond}
+          showLabels={showLabels}
+          mute={mute}
         />
         <FourStack
           fourCards={secondFour}
@@ -396,6 +406,8 @@ export default function HomeScreen() {
           setFirst={setFirst}
           second={second}
           setSecond={setSecond}
+          showLabels={showLabels}
+          mute={mute}
         />
         <FourStack
           fourCards={thirdFour}
@@ -405,6 +417,8 @@ export default function HomeScreen() {
           setFirst={setFirst}
           second={second}
           setSecond={setSecond}
+          showLabels={showLabels}
+          mute={mute}
         />
         <FourStack
           fourCards={fourthFour}
@@ -414,6 +428,8 @@ export default function HomeScreen() {
           setFirst={setFirst}
           second={second}
           setSecond={setSecond}
+          showLabels={showLabels}
+          mute={mute}
         />
       </View>
       <PlayArea
@@ -427,6 +443,8 @@ export default function HomeScreen() {
         setSecond={setSecond}
         faceUps={faceUps}
         setFaceUps={setFaceUps}
+        showLabels={showLabels}
+        mute={mute}
       />
       <Controls
         handleDraw={handleDraw}
@@ -434,6 +452,11 @@ export default function HomeScreen() {
         remaining={remaining}
         handleReset={handleReset}
         first={first}
+        mute={mute}
+        setOpenOptions={setOpenOptions}
+        boxFour={boxFour}
+        setOpenResults={setOpenResults}
+        setFirst={setFirst}
       />
       <InfoPop visible={visible} setVisible={setVisible} />
       {openCheckBox && (
@@ -451,6 +474,15 @@ export default function HomeScreen() {
           boxThree={boxThree}
           boxFour={boxFour}
           imageSet={cardImgs}
+        />
+      )}
+      {openOptions && (
+        <OptionsOverlay
+          setOpenOptions={setOpenOptions}
+          mute={mute}
+          setMute={setMute}
+          showLabels={showLabels}
+          setShowLabels={setShowLabels}
         />
       )}
     </ImageBackground>

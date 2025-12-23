@@ -1,7 +1,14 @@
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import React, { useEffect } from "react";
-import { Dimensions, Image, Pressable, StyleSheet, View } from "react-native";
+import {
+  Dimensions,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 interface Card {
   month: string; // e.g., "Jan", "Feb", etc.
@@ -22,6 +29,8 @@ interface Prop {
   setFirst: (value: Card | null) => void;
   second: Card | null;
   setSecond: (value: Card | null) => void;
+  showLabels: Boolean;
+  mute: Boolean;
 }
 
 const FourStack = ({
@@ -31,13 +40,15 @@ const FourStack = ({
   setFirst,
   second,
   setSecond,
+  showLabels,
+  mute,
 }: Prop) => {
   // Sounds
   //////////////////////
   const plasticPlayer = useAudioPlayer(require("../assets/plastic.mp3"));
 
   useEffect(() => {
-    plasticPlayer.volume = 0.1;
+    plasticPlayer.volume = 0.2;
   }, []);
 
   const playSfx = (player: any) => {
@@ -54,7 +65,9 @@ const FourStack = ({
 
     if (first === null) {
       setFirst(card);
-      playSfx(plasticPlayer);
+      if (!mute) {
+        playSfx(plasticPlayer);
+      }
       console.log("first card selected");
     }
 
@@ -131,6 +144,34 @@ const FourStack = ({
               style={styles.image}
               resizeMode="stretch"
             ></Image>
+            {showLabels && (
+              <View
+                style={{
+                  position: "absolute",
+                  right:0,
+                  left: 0,
+                  bottom: 0,
+                  marginVertical: 4,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.8)",
+                    color: "black",
+                    textAlign: "center",
+                    borderRadius: 2,
+                    fontSize: vw * 0.025,
+                    fontWeight: "bold",
+                    paddingHorizontal: 4,
+                    opacity: x === fourCards[fourCards.length - 1] ? 1 : 0
+                  }}
+                >
+                  {x.title1}
+                </Text>
+              </View>
+            )}
           </Pressable>
         );
       })}

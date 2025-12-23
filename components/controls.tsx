@@ -1,6 +1,8 @@
+import Entypo from "@expo/vector-icons/Entypo";
+import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
-import { Link } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -10,7 +12,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -31,6 +32,11 @@ interface Prop {
   remaining: Card[];
   handleReset: () => void;
   first: Card | null;
+  mute: Boolean;
+  setOpenOptions: (value: boolean) => void;
+  boxFour: Card[],
+  setOpenResults: (value: boolean) => void;
+  setFirst: (value: Card | null) => void;
 }
 
 const Controls = ({
@@ -39,6 +45,11 @@ const Controls = ({
   remaining,
   handleReset,
   first,
+  mute,
+  setOpenOptions,
+  boxFour,
+  setOpenResults,
+  setFirst
 }: Prop) => {
   // Sounds
   //////////////////////
@@ -83,13 +94,13 @@ const Controls = ({
   // Set volume once after creation
   useEffect(() => {
     swishPlayers.forEach((player) => {
-      player.volume = 0.1;
+      player.volume = 0.3;
     });
   }, []);
 
   useEffect(() => {
     clickPlayers.forEach((player) => {
-      player.volume = 0.9;
+      player.volume = 1;
     });
   }, []);
 
@@ -153,7 +164,9 @@ const Controls = ({
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // playSfx(plasticPlayer);
-    playSwish();
+    if (!mute) {
+      playSwish();
+    }
 
     translateY.setValue(0);
     setOpacity(1);
@@ -181,7 +194,8 @@ const Controls = ({
   //   }
   // };
   const handlePressOut = () => {
-    if (first !== null) return;
+    // if (first !== null) return;
+    setFirst(null)
 
     setShowCycle(true);
     // playSfx(swishPlayer);
@@ -196,7 +210,9 @@ const Controls = ({
 
       setTimeout(() => {
         // playSfx(clickPlayer)
-        playClick();
+        if (!mute) {
+          playClick();
+        }
       }, 80);
 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -204,7 +220,7 @@ const Controls = ({
   };
 
   const handleResetPress = () => {
-    Alert.alert("Reset", "Start over with a new deck?", [
+    Alert.alert("Restart", "Start over with a new deck?", [
       {
         text: "Yes",
         onPress: () => {
@@ -222,28 +238,90 @@ const Controls = ({
 
   const [cycleBorder, setCycleBorder] = useState(false);
 
+  const [options, setOptions] = useState(true);
+  const [info, setInfo] = useState(true);
+  const [restart, setRestart] = useState(true);
+
   return (
     <View style={styles.bottomBar}>
       <View
         style={{
-          flex: 1,
+          flex: 2,
           display: "flex",
           flexDirection: "row",
+          flexWrap: "nowrap",
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "black",
-          height: 50,
+          height: 70,
+          paddingVertical: 5,
         }}
       >
-        <Link
-          href="/modal"
+        <Pressable
           style={{
-            color: "rgba(255, 255, 255, 0.75)",
-            fontWeight: "600",
+            width: "50%",
+          }}
+          onPressIn={() => {
+            Haptics.selectionAsync();
+            setOptions(false);
+          }}
+          onPressOut={() => {
+            setOptions(true);
+            setOpenOptions(true);
           }}
         >
-          Info
-        </Link>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <Ionicons
+              name="options-outline"
+              size={40}
+              color={options ? "white" : "rgba(255,255,255,0.5)"}
+            />
+            <Text
+              style={{
+                color: options ? "white" : "rgba(255,255,255,0.5)",
+                fontSize: 12,
+              }}
+            >
+              Options
+            </Text>
+          </View>
+        </Pressable>
+        <View
+          style={{
+            width: "50%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <Text
+            style={{
+              color: "rgba(255, 255, 255, 1)",
+              textAlign: "center",
+              fontSize: 30,
+            }}
+          >
+            {remaining.length}
+          </Text>
+          <Text
+            style={{
+              color: "rgba(255, 255, 255, 1)",
+              textAlign: "center",
+              fontSize: 12,
+            }}
+          >
+            Remaining
+          </Text>
+        </View>
       </View>
       <View
         style={{
@@ -254,17 +332,6 @@ const Controls = ({
           alignItems: "center",
         }}
       >
-        <Text
-          style={{
-            padding: 15,
-            color: "rgba(255, 255, 255, 0.75)",
-            fontWeight: "600",
-            fontSize: 12,
-            textAlign: "center",
-          }}
-        >
-          {remaining.length} Remaining
-        </Text>
         {remaining.length !== 0 && (
           <Pressable
             style={styles.drawButton}
@@ -309,56 +376,139 @@ const Controls = ({
             onPressOut={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setCycleBorder(false);
-              handleDraw();
+              boxFour.length === 12 ? setOpenResults(true) : handleDraw();
+              if (!mute && boxFour.length !== 12) {
+                playClick();
+              }
             }}
             style={{
-              ...styles.drawButton,
+              display: "flex",
+              justifyContent: "center", 
+              alignItems: "center",
+              width: "100%",
               borderWidth: 2,
-              borderColor: cycleBorder
+              borderColor: !cycleBorder
                 ? "rgba(255, 255, 255, 1)"
                 : "rgba(255, 255, 255, 0.5)",
               borderRadius: "25%",
               aspectRatio: 1,
-              borderStyle: "dashed",
+              borderStyle: "dotted",
             }}
           >
-            <Text
+            {boxFour.length !== 12 && <Text
               style={{
-                color: cycleBorder
+                color: !cycleBorder
                   ? "rgba(255, 255, 255, 1)"
                   : "rgba(255, 255, 255, 0.5)",
                 fontWeight: "600",
-                fontSize: 24,
+                fontSize: 20,
                 textAlign: "center",
               }}
             >
               Cycle Deck
-            </Text>
+            </Text>}
+                        {boxFour.length === 12 && <Text
+              style={{
+                color: !cycleBorder
+                  ? "rgba(255, 255, 255, 1)"
+                  : "rgba(255, 255, 255, 0.5)",
+                fontWeight: "600",
+                fontSize: 20,
+                textAlign: "center",
+              }}
+            >
+              Results
+            </Text>}
           </Pressable>
         )}
       </View>
-      <TouchableOpacity
-        onPress={() => handleResetPress()}
+      <View
         style={{
-          flex: 1,
+          flex: 2,
           display: "flex",
+          flexDirection: "row",
+          flexWrap: "nowrap",
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "black",
-          height: 50,
+          height: 70,
+          paddingVertical: 5,
         }}
       >
-        <Text
+        <Pressable
           style={{
-            color: "rgba(255, 255, 255, 0.75)",
-            fontWeight: "600",
-            textAlign: "center",
-            borderWidth: 2,
+            width: "50%",
+          }}
+          onPressIn={() => {
+            Haptics.selectionAsync();
+            setInfo(false);
+          }}
+          onPressOut={() => {
+            setInfo(true);
+            setOpenOptions(true);
           }}
         >
-          Reset
-        </Text>
-      </TouchableOpacity>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <Feather
+              name="info"
+              size={38}
+              color={info ? "white" : "rgba(255,255,255,0.5)"}
+            />
+            <Text
+              style={{
+                color: info ? "white" : "rgba(255,255,255,0.5)",
+                fontSize: 12,
+              }}
+            >
+              Info
+            </Text>
+          </View>
+        </Pressable>
+        <Pressable
+          style={{
+            width: "50%",
+          }}
+          onPressIn={() => {
+            Haptics.selectionAsync();
+            setRestart(false);
+          }}
+          onPressOut={() => {
+            setRestart(true);
+            handleResetPress();
+          }}
+        >
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <Entypo
+              name="cycle"
+              size={38}
+              color={restart ? "white" : "rgba(255,255,255,0.5)"}
+            />
+            <Text
+              style={{
+                color: restart ? "white" : "rgba(255,255,255,0.5)",
+                fontSize: 12,
+              }}
+            >
+              Restart
+            </Text>
+          </View>
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -373,7 +523,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 10,
     marginVertical: 15,
   },
   drawButton: {

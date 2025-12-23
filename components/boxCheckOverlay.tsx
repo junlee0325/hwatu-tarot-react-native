@@ -7,7 +7,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  View
+  View,
 } from "react-native";
 
 interface Card {
@@ -28,42 +28,43 @@ type Props = {
 };
 
 const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
-  const { width: vw} = Dimensions.get('window');
+  const { width: vw } = Dimensions.get("window");
 
   const [scale] = useState(new Animated.Value(1));
   const [opacity] = useState(new Animated.Value(0));
-  
-      useEffect(() => {
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }, []);
-  
-    const handlePressIn = () => {
-      Animated.spring(scale, {
-        toValue: 0.75,
-        useNativeDriver: true,
-      }).start();
-    };
-  
-    const handlePressOut = () => {
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 3,
-        useNativeDriver: true,
-      }).start();
-    };
-  
-    const handleClose = () => {
-      Haptics.selectionAsync();
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => setOpenCheckBox(false));
-    };
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Haptics.selectionAsync();
+    Animated.spring(scale, {
+      toValue: 0.75,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 3,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleClose = () => {
+    Haptics.selectionAsync();
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => setOpenCheckBox(false));
+  };
 
   const monthCounts = selectedBox.reduce((acc, card) => {
     acc[card.month] = (acc[card.month] || 0) + 1;
@@ -81,12 +82,12 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        opacity
+        opacity,
       }}
     >
       <View
         style={{
-          backgroundColor: "#f3f3f3",
+          backgroundColor: "#cccccc",
           borderRadius: 10,
           padding: 10,
           width: "90%",
@@ -111,7 +112,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
             boxShadow: "inset 1px 1px 4px black",
             paddingVertical: 5,
             borderRadius: 8,
-            paddingHorizontal: 12
+            paddingHorizontal: 12,
           }}
         >
           {selectedBox.length > 0 ? (
@@ -120,13 +121,13 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
               return (
                 <View
                   style={{
-                    width: hasFour ? vw * 0.11 : vw * 0.09,
+                    width: vw * 0.12,
                     aspectRatio: 230 / 360,
                     borderRadius: 2,
                     transform: [{ rotate: `${card.rotation}deg` }],
-                    borderColor: "indianred",
+                    borderColor: hasFour ? "yellow" : "indianred",
                     borderWidth: 1,
-                    boxShadow: "1px 1px 2px black",
+                    boxShadow: "2px 2px 2px black",
                   }}
                   key={i}
                 >
@@ -148,7 +149,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
                 alignItems: "center",
               }}
             >
-              <Animated.Text>No cards in this box</Animated.Text>
+              <Text style={{ fontSize: 20 }}>No cards in this box</Text>
             </View>
           )}
         </View>
