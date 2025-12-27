@@ -1,3 +1,9 @@
+import { useLanguage } from "@/context/LanguageContext";
+import {
+  Jua_400Regular,
+  useFonts as useJuaFonts,
+} from "@expo-google-fonts/jua";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
@@ -19,9 +25,8 @@ interface Card {
   id: string;
   img: string;
   rotation: number;
-  title1: string;
-  title2: string;
-  meaning: string;
+  title: { en: string; ko: string };
+  meaning: { en: string; ko: string };
 }
 
 interface Prop {
@@ -53,18 +58,36 @@ const PlayArea = ({
   showLabels,
   mute,
 }: Prop) => {
+
+  const { lang } = useLanguage();
+
+  const [juaLoaded] = useJuaFonts({ Jua_400Regular });
+
   // Sounds
   //////////////////////
-  const plasticPlayer = useAudioPlayer(require("../assets/plastic.mp3"));
+  const plasticPlayers = [
+    useAudioPlayer(require("../assets/plastic.mp3")),
+    useAudioPlayer(require("../assets/plastic.mp3")),
+    useAudioPlayer(require("../assets/plastic.mp3")),
+  ];
 
   useEffect(() => {
-    plasticPlayer.volume = 0.2;
+    plasticPlayers.forEach((p) => {
+      p.volume = 0.05;
+    });
   }, []);
 
-  const playSfx = (player: any) => {
-    player.seekTo(0);
-    player.play();
-    player.seekTo(0);
+  const playPlastic = () => {
+    for (let i = 0; i < plasticPlayers.length; i++) {
+      const player = plasticPlayers[i];
+
+      if (!player.playing) {
+        player.seekTo(0);
+        player.play();
+        return;
+      }
+    }
+    // all busy → drop sound (correct behavior)
   };
   //////////////////////////
 
@@ -95,7 +118,7 @@ const PlayArea = ({
     if (first === null) {
       setFirst(card);
       if (!mute) {
-        playSfx(plasticPlayer);
+        playPlastic();
       }
       console.log("first card selected");
     }
@@ -141,23 +164,52 @@ const PlayArea = ({
     return true;
   };
 
+  const opacityCheck = (card: Card) => {
+    const firstCard = faceUps[0];
+    const lastCard = faceUps[faceUps.length - 1];
+    const secondLastCard =
+      faceUps.length >= 2 ? faceUps[faceUps.length - 2] : null;
+
+    if (card === firstCard) {
+      return false;
+    }
+
+    if (card === lastCard) {
+      return false;
+    }
+
+    if (
+      first !== null &&
+      first.month === card.month &&
+      card === secondLastCard &&
+      card.month === lastCard.month &&
+      first !== firstCard
+    ) {
+      return false;
+    }
+
+    if (
+      card === secondLastCard &&
+      card.month === lastCard.month &&
+      first !== firstCard
+    ) {
+      return false;
+    }
+
+    return true;
+  };
+
   return (
     <View
       style={{
         width: "100%",
+        height: "30%",
       }}
     >
-      <View
-        style={{
-          height: 260,
-          borderRadius: 10,
-          borderWidth: 0,
-          borderColor: "rgba(255, 255, 255, 0.1)",
-          borderStyle: "dashed",
-        }}
-      >
+      <View style={{}}>
         <ScrollView
           ref={scrollRef}
+          style={{ height: "100%" }}
           contentContainerStyle={{
             display: "flex",
             flexDirection: "row",
@@ -177,16 +229,20 @@ const PlayArea = ({
               style={{
                 ...styles.imageBox,
                 width: vw * 0.15,
-                borderColor: first === x ? "indianred" : "indianred",
+                borderColor: opacityCheck(x)
+                  ? "rgba(0, 0, 0, 0.5)"
+                  : "indianred",
                 borderWidth: first === x ? 1 : 1,
                 transform: [
                   // { translateX: rotateInt[i] },
                   { rotate: `${x.rotation * -1}deg` },
                   { scale: first === x ? 1.15 : 1 },
                 ],
-                opacity: disableCheck(x) ? 0.5 : 1,
+                opacity: opacityCheck(x) ? 1 : 1,
                 boxShadow:
-                  first === x ? "1px 1px 10px 1px yellow" : "2px 2px 2px black",
+                  first === x
+                    ? "0px 0px 0px 2px rgba(255, 217, 0, 1)"
+                    : "2px 2px 2px black",
                 zIndex: first === x ? 10 : 1,
               }}
               onPressIn={() =>
@@ -195,6 +251,31 @@ const PlayArea = ({
               onPressOut={() => handlePress(x)}
               disabled={disableCheck(x)}
             >
+              <View
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: opacityCheck(x) ? "rgba(0, 0, 0, 0.5)" : "",
+                  zIndex: 4,
+                  opacity: disableCheck(x) ? 1 : 0,
+                }}
+              >
+                <MaterialIcons
+                  name="do-not-touch"
+                  size={30}
+                  color="rgba(255, 255, 255, 0.5)"
+                  style={{
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    borderRadius: "50%",
+                    padding: 4,
+                    boxShadow: "0px 0px 2px 1px rgba(0, 0, 0, 0.5)",
+                  }}
+                />
+              </View>
               <Image
                 source={imageSet[x.img]}
                 style={styles.image}
@@ -214,16 +295,18 @@ const PlayArea = ({
                 >
                   <Text
                     style={{
-                      backgroundColor: "rgba(255,255,255,0.8)",
+                      backgroundColor: "rgba(255, 217, 0, 1)",
+                      width: "100%",
                       color: "black",
                       textAlign: "center",
                       borderRadius: 2,
-                      fontSize: vw * 0.025,
+                      fontSize: lang === "en" ? 14 : 16,
                       fontWeight: "bold",
-                      paddingHorizontal: 4,
+                      paddingVertical: 1,
+                      fontFamily: "Jua_400Regular"
                     }}
                   >
-                    {x.title1}
+                    {x.title[lang]}
                   </Text>
                 </View>
               )}
@@ -251,7 +334,7 @@ const PlayArea = ({
               ],
               boxShadow:
                 first === faceUps[0]
-                  ? "1px 1px 10px 1px yellow"
+                  ? "0px 0px 0px 2px rgba(255, 217, 0, 1)"
                   : "2px 2px 2px black",
             }}
             onPressIn={() =>
@@ -279,15 +362,18 @@ const PlayArea = ({
               >
                 <Text
                   style={{
-                    backgroundColor: "rgba(255,255,255,0.9)",
+                    backgroundColor: "rgba(255, 217, 0, 1)",
+                    width: "100%",
                     color: "black",
                     textAlign: "center",
                     borderRadius: 2,
-                    fontSize: vw * 0.025,
+                    fontSize: lang === "en" ? 14 : 16,
                     fontWeight: "bold",
+                    paddingVertical: 1,
+                    fontFamily: "Jua_400Regular"
                   }}
                 >
-                  {faceUps[0].title1}
+                  {faceUps[0].title[lang]}
                 </Text>
               </View>
             )}

@@ -17,9 +17,8 @@ interface Card {
   id: string; // optional, unique identifier
   img: string;
   rotation: number;
-  title1: string;
-  title2: string;
-  meaning: string;
+  title: { en: string; ko: string };
+  meaning: { en: string; ko: string };
 }
 
 type Props = {
@@ -67,7 +66,6 @@ const OptionsOverlay = ({
   };
 
   const handleClose = () => {
-    Haptics.selectionAsync();
     Animated.timing(opacity, {
       toValue: 0,
       duration: 300,
@@ -85,7 +83,7 @@ const OptionsOverlay = ({
         width: "100%",
         height: "100%",
         zIndex: 20,
-        backgroundColor: "rgba(0,0,0,.5)",
+        backgroundColor: "rgba(255, 255, 255, 0.25)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -94,7 +92,7 @@ const OptionsOverlay = ({
     >
       <View
         style={{
-          backgroundColor: "#cccccc",
+          backgroundColor: "rgba(255, 217, 0, 1)",
           borderRadius: 10,
           padding: 10,
           width: "90%",
@@ -103,6 +101,7 @@ const OptionsOverlay = ({
           flexDirection: "column",
           justifyContent: "space-between",
           alignItems: "center",
+          boxShadow: "inset 2px 2px 2px white, 2px 2px 2px 1px black",
         }}
       >
         <View
@@ -189,11 +188,11 @@ const OptionsOverlay = ({
           >
             <Animated.View
               style={{
-                marginTop: 20,
-                backgroundColor: "rgba(0,0,0,0.7)",
+                backgroundColor: "rgba(224, 0, 0, 1)",
                 paddingVertical: 10,
                 paddingHorizontal: 20,
-                borderRadius: 8,
+                borderRadius: 10,
+                boxShadow: "inset 2px 2px 2px white, 2px 2px 2px 1px black",
                 transform: [{ scale }],
               }}
             >

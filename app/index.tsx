@@ -1,18 +1,24 @@
-import BoxCheckOverlay from "@/components/boxCheckOverlay";
 import Container from "@/components/container";
 import Controls from "@/components/controls";
 import FourStack from "@/components/fourStack";
 import Header from "@/components/header";
-import InfoPop from "@/components/infoPop";
-import OptionsOverlay from "@/components/optionsOverlay";
+import InfoPop from "@/components/infoOverlay";
 import PlayArea from "@/components/playArea";
 import ResultsOverlay from "@/components/resultsOverlay";
 import { Asset } from "expo-asset";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
-import { Alert, ImageBackground, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Dimensions,
+  ImageBackground,
+  StyleSheet,
+  View,
+} from "react-native";
 import { cardImgs } from "../assets/images";
+
+const { width: vw } = Dimensions.get("window");
 
 interface Card {
   month: string; // e.g., "Jan", "Feb", etc.
@@ -20,9 +26,8 @@ interface Card {
   id: string; // optional, unique identifier
   img: string;
   rotation: number;
-  title1: string;
-  title2: string;
-  meaning: string;
+  title: { en: string; ko: string };
+  meaning: { en: string; ko: string };
 }
 
 const months = [
@@ -42,49 +47,70 @@ const months = [
 
 const ranks = ["A", "B", "C", "D"];
 
-const titles1: Record<string, string> = {
-  jan: "Pine",
-  feb: "Plum",
-  mar: "Cherry Blossom",
-  apr: "Wisteria",
-  may: "Water Iris",
-  jun: "Peony",
-  jul: "Bush Clover",
-  aug: "Hill",
-  sep: "Mums",
-  oct: "Maple Leaves",
-  nov: "Empress Tree",
-  dec: "Rain",
+const titles: Record<string, { en: string; ko: string }> = {
+  jan: { en: "Pine", ko: "솔" },
+  feb: { en: "Plum", ko: "매조" },
+  mar: { en: "Cherry Blossom", ko: "벚꽃" },
+  apr: { en: "Wisteria", ko: "흑싸리" },
+  may: { en: "Water Iris", ko: "난초" },
+  jun: { en: "Peony", ko: "모란" },
+  jul: { en: "Bush Clover", ko: "홍싸리" },
+  aug: { en: "Hill", ko: "공산" },
+  sep: { en: "Mums", ko: "국화" },
+  oct: { en: "Maple Leaves", ko: "단풍" },
+  nov: { en: "Empress Tree", ko: "오동" },
+  dec: { en: "Rain", ko: "비" },
 };
 
-const titles2: Record<string, string> = {
-  jan: "솔",
-  feb: "매조",
-  mar: "벚꽃",
-  apr: "흑싸리",
-  may: "난초",
-  jun: "모란",
-  jul: "홍싸리",
-  aug: "공산",
-  sep: "국화",
-  oct: "단풍",
-  nov: "오동",
-  dec: "비",
-};
-
-const meanings: Record<string, string> = {
-  jan: "Receive news or tidings",
-  feb: "Meet your beloved",
-  mar: "Set out on a brief journey",
-  apr: "Experience a minor conflict",
-  may: "Dine out or meet with someone",
-  jun: "Welcome a happy occasion",
-  jul: "Stumble upon an unexpected windfall",
-  aug: "Acquire money",
-  sep: "Encounter an occasion for a drink",
-  oct: "Face worries or concerns",
-  nov: "Spend money or come across an expense",
-  dec: "Have a visitor",
+const meanings: Record<string, { en: string; ko: string }> = {
+  jan: {
+    en: "Longevity, Luck, Success, Good News",
+    ko: "장수, 건강, 길한 운, 좋은 소식",
+  },
+  feb: {
+    en: "Hope, Opportunity, Communication, Small Joy",
+    ko: "희망, 기회, 소식, 작은 기쁨",
+  },
+  mar: {
+    en: "Happiness, Friendship, Travel, Growth",
+    ko: "즐거움, 친구, 여행, 성장",
+  },
+  apr: {
+    en: "Love, Romance, Minor Luck, Happiness",
+    ko: "사랑, 연애, 작은 기쁨, 길운",
+  },
+  may: {
+    en: "News, Relationships, Progress, Cautious Optimism",
+    ko: "소식, 인연, 발전, 신중 필요",
+  },
+  jun: {
+    en: "Big Joy, Wealth, Important Changes, Happiness",
+    ko: "큰 기쁨, 재물, 중요한 변화, 즐거움",
+  },
+  jul: {
+    en: "Purity, Luck, Achievement, New Beginnings",
+    ko: "순수함, 행운, 성취, 새로운 시작",
+  },
+  aug: {
+    en: "Peace, Reflection, Stable Fortune, Relationships",
+    ko: "평화, 안정된 운, 관계, 성찰",
+  },
+  sep: {
+    en: "Harmony, Clarity, Communication, Joy",
+    ko: "조화, 명확함, 소통, 즐거움",
+  },
+  oct: {
+    en: "Change, Caution, Reflection, Opportunities",
+    ko: "변화, 신중함, 성찰, 기회",
+  },
+  nov: {
+    en: "Wisdom, Gratitude, Calm, Patience",
+    ko: "지혜, 감사, 침착, 인내",
+  },
+  dec: {
+    en: "Endings, Completion, Preparation, Hope",
+    ko: "마무리, 완성, 준비, 희망",
+  },
 };
 
 const getRandomInt = () => {
@@ -100,8 +126,7 @@ const deck: Card[] = months.flatMap((month) =>
     id: `${month}${rank}`, // unique id
     img: `${month}${rank}`,
     rotation: getRandomInt(),
-    title1: titles1[month],
-    title2: titles2[month],
+    title: titles[month],
     meaning: meanings[month],
   }))
 );
@@ -111,8 +136,8 @@ export default function HomeScreen() {
 
   // Sounds
   //////////////////////
-  // Create a pool of 3 smack players
-  const smackPlayers = [
+  // Create pool ONCE (hooks order is stable)
+  const players = [
     useAudioPlayer(require("../assets/smack.mp3")),
     useAudioPlayer(require("../assets/smack.mp3")),
     useAudioPlayer(require("../assets/smack.mp3")),
@@ -120,25 +145,28 @@ export default function HomeScreen() {
     useAudioPlayer(require("../assets/smack.mp3")),
   ];
 
-  let smackIndex = 0;
-
-  // Set volume once after creation
+  // Init volume once
   useEffect(() => {
-    const volume = 0.6; // desired volume
-    smackPlayers.forEach((player) => {
-      player.volume = volume;
+    players.forEach((p) => {
+      p.volume = 0.6;
     });
   }, []);
 
-  // Function to play smack sound (spam-safe)
+  // Play function (drop-safe)
   const playSmack = () => {
-    const player = smackPlayers[smackIndex];
-    player.seekTo(0);
-    player.play();
-
-    smackIndex = (smackIndex + 1) % smackPlayers.length;
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+      if (!player.playing) {
+        player.seekTo(0);
+        player.play();
+        return;
+      }
+    }
+    // setTimeout(() => {
+    //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    // }, 2000); // Small delay before playing the sound after haptic
   };
-  
+
   //////////////////////////
 
   // Preload all card images
@@ -163,6 +191,8 @@ export default function HomeScreen() {
   const [showLabels, setShowLabels] = useState(false);
   const [mute, setMute] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
+
+  const [openInfo, setOpenInfo] = useState(true);
 
   const [first, setFirst] = useState<Card | null>(null);
   const [second, setSecond] = useState<Card | null>(null);
@@ -203,6 +233,8 @@ export default function HomeScreen() {
 
   // Draw
   const handleDraw = () => {
+    setFirst(null);
+
     if (remaining.length === 0) {
       checkImpossible();
       setRemaining([...faceUps].reverse());
@@ -226,6 +258,18 @@ export default function HomeScreen() {
   const [boxTarget, setBoxTarget] = useState<number>(0);
 
   const boxSetters = [setBoxOne, setBoxTwo, setBoxThree, setBoxFour];
+
+  useEffect(() => {
+    if (!mute && boxOne.length !== 0) {
+      playSmack();
+    }
+
+    setTimeout(() => {
+      if (boxOne.length !== 0) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }
+    }, 100);
+  }, [boxOne, boxTwo, boxThree, boxFour]);
 
   useEffect(() => {
     const newMatched: Card[] = [];
@@ -258,12 +302,6 @@ export default function HomeScreen() {
         boxSetters[boxTarget]((prev) => [...prev, ...newMatched]);
 
         setBoxTarget((prev) => (prev + 1) % 4);
-
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
-        if (!mute) {
-          playSmack();
-        }
 
         console.log("matched:", newMatched);
       } else {
@@ -351,7 +389,7 @@ export default function HomeScreen() {
       style={styles.whole}
       resizeMode="cover"
     >
-      <Header />
+      <Header setOpenInfo={setOpenInfo} />
       <View style={styles.fourContainer}>
         <Container
           pairs={boxOne}
@@ -360,6 +398,7 @@ export default function HomeScreen() {
           index={0}
           setOpenCheckBox={setOpenCheckBox}
           setSelectedBox={setSelectedBox}
+          box={boxOne}
         />
         <Container
           pairs={boxTwo}
@@ -368,6 +407,7 @@ export default function HomeScreen() {
           index={1}
           setOpenCheckBox={setOpenCheckBox}
           setSelectedBox={setSelectedBox}
+          box={boxTwo}
         />
         <Container
           pairs={boxThree}
@@ -376,6 +416,7 @@ export default function HomeScreen() {
           index={2}
           setOpenCheckBox={setOpenCheckBox}
           setSelectedBox={setSelectedBox}
+          box={boxThree}
         />
         <Container
           pairs={boxFour}
@@ -384,6 +425,7 @@ export default function HomeScreen() {
           index={3}
           setOpenCheckBox={setOpenCheckBox}
           setSelectedBox={setSelectedBox}
+          box={boxFour}
         />
       </View>
       <View style={styles.fourStack}>
@@ -453,19 +495,23 @@ export default function HomeScreen() {
         handleReset={handleReset}
         first={first}
         mute={mute}
-        setOpenOptions={setOpenOptions}
+        setMute={setMute}
+        showLabels={showLabels}
+        setShowLabels={setShowLabels}
         boxFour={boxFour}
         setOpenResults={setOpenResults}
-        setFirst={setFirst}
+        setOpenInfo={setOpenInfo}
       />
-      <InfoPop visible={visible} setVisible={setVisible} />
-      {openCheckBox && (
+      {openInfo && (
+        <InfoPop setOpenInfo={setOpenInfo} deck={deck} imageSet={cardImgs} />
+      )}
+      {/* {openCheckBox && (
         <BoxCheckOverlay
           setOpenCheckBox={setOpenCheckBox}
           selectedBox={selectedBox}
           imageSet={cardImgs}
         />
-      )}
+      )} */}
       {openResults && (
         <ResultsOverlay
           setOpenResults={setOpenResults}
@@ -476,7 +522,7 @@ export default function HomeScreen() {
           imageSet={cardImgs}
         />
       )}
-      {openOptions && (
+      {/* {openOptions && (
         <OptionsOverlay
           setOpenOptions={setOpenOptions}
           mute={mute}
@@ -484,7 +530,7 @@ export default function HomeScreen() {
           showLabels={showLabels}
           setShowLabels={setShowLabels}
         />
-      )}
+      )} */}
     </ImageBackground>
   );
 }
@@ -496,7 +542,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
     overflow: "hidden",
   },
   fourContainer: {
@@ -508,11 +554,11 @@ const styles = StyleSheet.create({
   },
   fourStack: {
     width: "100%",
+    height: "20%",
     display: "flex",
     flexDirection: "row",
     flexWrap: "nowrap",
     justifyContent: "space-evenly",
-    height: 150,
     marginVertical: 2,
   },
 });

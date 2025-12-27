@@ -1,6 +1,11 @@
+import { useLanguage } from "@/context/LanguageContext";
+import {
+  Jua_400Regular,
+  useFonts as useJuaFonts,
+} from "@expo-google-fonts/jua";
 import Entypo from "@expo/vector-icons/Entypo";
 import Feather from "@expo/vector-icons/Feather";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
@@ -21,9 +26,8 @@ interface Card {
   id: string; // optional, unique identifier
   img: string;
   rotation: number;
-  title1: string;
-  title2: string;
-  meaning: string;
+  title: { en: string; ko: string };
+  meaning: { en: string; ko: string };
 }
 
 interface Prop {
@@ -33,11 +37,21 @@ interface Prop {
   handleReset: () => void;
   first: Card | null;
   mute: Boolean;
-  setOpenOptions: (value: boolean) => void;
-  boxFour: Card[],
+  setMute: (value: boolean) => void;
+  showLabels: Boolean;
+  setShowLabels: (value: boolean) => void;
+  boxFour: Card[];
   setOpenResults: (value: boolean) => void;
-  setFirst: (value: Card | null) => void;
+  setOpenInfo: (value: boolean) => void;
 }
+
+const audio = { en: "Audio", ko: "음향" };
+const helper = { en: "Helper", ko: "도우미" };
+const information = { en: "Info", ko: "정보" };
+const retry = { en: "Restart", ko: "재시작" };
+const cycle = { en: "Cycle Deck", ko: "순환" };
+const result = { en: "Open Result", ko: "결과 열기" };
+const count = { en: "In Deck", ko: "남은 패" };
 
 const Controls = ({
   handleDraw,
@@ -46,38 +60,26 @@ const Controls = ({
   handleReset,
   first,
   mute,
-  setOpenOptions,
+  setMute,
+  showLabels,
+  setShowLabels,
   boxFour,
   setOpenResults,
-  setFirst
+  setOpenInfo,
 }: Prop) => {
-  // Sounds
-  //////////////////////
-  // const plasticPlayer = useAudioPlayer(require("../assets/plastic.mp3"));
-  // const swishPlayer = useAudioPlayer(require("../assets/swish.mp3"));
-  // const clickPlayer = useAudioPlayer(require("../assets/click.mp3"));
+  const { lang } = useLanguage();
 
-  // useEffect(() => {
-  //   plasticPlayer.volume = 0.1;
-  //   swishPlayer.volume = 0.1;
-  //   clickPlayer.volume = 1;
-  // }, []);
-
-  // const playSfx = (player: any) => {
-  //   player.seekTo(0);
-  //   player.play();
-  //   player.seekTo(0);
-  // };
-  //////////////////////////
+  const [juaLoaded] = useJuaFonts({ Jua_400Regular });
 
   // Sounds
   //////////////////////
-  // Create a pool of 3 swish players
-  const swishPlayers = [
-    useAudioPlayer(require("../assets/swish.mp3")),
-    useAudioPlayer(require("../assets/swish.mp3")),
-    useAudioPlayer(require("../assets/swish.mp3")),
-    useAudioPlayer(require("../assets/swish.mp3")),
+  // 🔊 DROP-SAFE SOUND POOLS
+  //////////////////////
+  const plasticPlayers = [
+    useAudioPlayer(require("../assets/plastic.mp3")),
+    useAudioPlayer(require("../assets/plastic.mp3")),
+    useAudioPlayer(require("../assets/plastic.mp3")),
+    useAudioPlayer(require("../assets/plastic.mp3")),
   ];
 
   const clickPlayers = [
@@ -87,38 +89,39 @@ const Controls = ({
     useAudioPlayer(require("../assets/click.mp3")),
   ];
 
-  let swishIndex = 0;
-
-  let clickIndex = 0;
-
-  // Set volume once after creation
   useEffect(() => {
-    swishPlayers.forEach((player) => {
-      player.volume = 0.3;
-    });
+    plasticPlayers.forEach((p) => (p.volume = 0.05));
+    clickPlayers.forEach((p) => (p.volume = 0.5));
   }, []);
 
-  useEffect(() => {
-    clickPlayers.forEach((player) => {
-      player.volume = 1;
-    });
-  }, []);
+  const playPlastic = () => {
+    for (let i = 0; i < plasticPlayers.length; i++) {
+      const p = plasticPlayers[i];
+      if (!p.playing) {
+        p.seekTo(0);
+        p.play();
+        return;
+      }
+    }
 
-  // Function to play smack sound (spam-safe)
-  const playSwish = () => {
-    const player = swishPlayers[swishIndex];
-    player.seekTo(0);
-    player.play();
-
-    swishIndex = (swishIndex + 1) % swishPlayers.length;
+    // setTimeout(() => {
+    //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // }, 200);
   };
 
   const playClick = () => {
-    const player = clickPlayers[clickIndex];
-    player.seekTo(0);
-    player.play();
+    for (let i = 0; i < clickPlayers.length; i++) {
+      const p = clickPlayers[i];
+      if (!p.playing) {
+        p.seekTo(0);
+        p.play();
+        return;
+      }
+    }
 
-    clickIndex = (clickIndex + 1) % clickPlayers.length;
+    // setTimeout(() => {
+    //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    // }, 200);
   };
   //////////////////////////
 
@@ -162,11 +165,17 @@ const Controls = ({
     if (remaining.length === 0) return;
     if (first !== null) return;
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     // playSfx(plasticPlayer);
-    if (!mute) {
-      playSwish();
-    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    setTimeout(() => {
+      if (!mute) {
+        playPlastic();
+      }
+    }, 100);
 
     translateY.setValue(0);
     setOpacity(1);
@@ -195,10 +204,8 @@ const Controls = ({
   // };
   const handlePressOut = () => {
     // if (first !== null) return;
-    setFirst(null)
 
     setShowCycle(true);
-    // playSfx(swishPlayer);
 
     Animated.timing(translateY, {
       toValue: -120,
@@ -208,14 +215,15 @@ const Controls = ({
       setOpacity(0);
       handleDraw();
 
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
       setTimeout(() => {
-        // playSfx(clickPlayer)
         if (!mute) {
           playClick();
         }
-      }, 80);
+      }, 100);
 
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     });
   };
 
@@ -238,7 +246,8 @@ const Controls = ({
 
   const [cycleBorder, setCycleBorder] = useState(false);
 
-  const [options, setOptions] = useState(true);
+  const [sound, setSound] = useState(true);
+  const [labels, setLabels] = useState(true);
   const [info, setInfo] = useState(true);
   const [restart, setRestart] = useState(true);
 
@@ -257,69 +266,95 @@ const Controls = ({
         }}
       >
         <Pressable
-          style={{
-            width: "50%",
-          }}
+          style={{ width: "50%" }}
           onPressIn={() => {
             Haptics.selectionAsync();
-            setOptions(false);
+            setLabels(false);
           }}
           onPressOut={() => {
-            setOptions(true);
-            setOpenOptions(true);
+            setLabels(true);
+            setShowLabels(!showLabels);
           }}
         >
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              alignItems: "center",
-              height: "100%",
-            }}
-          >
-            <Ionicons
-              name="options-outline"
-              size={40}
-              color={options ? "white" : "rgba(255,255,255,0.5)"}
-            />
-            <Text
+          {showLabels ? (
+            <View
               style={{
-                color: options ? "white" : "rgba(255,255,255,0.5)",
-                fontSize: 12,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                alignItems: "center",
+                height: "100%",
               }}
             >
-              Options
-            </Text>
-          </View>
+              <MaterialCommunityIcons
+                name="label-outline"
+                size={34}
+                color={labels ? "white" : "rgba(255,255,255,0.5)"}
+              />
+              <Text
+                style={{
+                  color: labels ? "white" : "rgba(255,255,255,0.5)",
+                  fontSize: 18,
+                  fontFamily: "Jua_400Regular"
+                }}
+              >
+                {helper[lang]}
+              </Text>
+            </View>
+          ) : (
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <MaterialCommunityIcons
+                name="label-off-outline"
+                size={34}
+                color={labels ? "rgba(255,255,255,0.5)" : "white"}
+              />
+              <Text
+                style={{
+                  color: labels ? "rgba(255,255,255,0.5)" : "white",
+                  fontSize: 18,
+                  fontFamily: "Jua_400Regular"
+                }}
+              >
+                {helper[lang]}
+              </Text>
+            </View>
+          )}
         </Pressable>
         <View
           style={{
-            width: "50%",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
             alignItems: "center",
             height: "100%",
+            width: "50%",
           }}
         >
           <Text
             style={{
-              color: "rgba(255, 255, 255, 1)",
-              textAlign: "center",
-              fontSize: 30,
+              color: labels ? "white" : "rgba(255,255,255,0.5)",
+              fontSize: 26,
+              fontFamily: "Jua_400Regular",padding:4
             }}
           >
             {remaining.length}
           </Text>
           <Text
             style={{
-              color: "rgba(255, 255, 255, 1)",
-              textAlign: "center",
-              fontSize: 12,
+              color: labels ? "white" : "rgba(255,255,255,0.5)",
+              fontSize: 18,
+              fontFamily: "Jua_400Regular"
             }}
           >
-            Remaining
+            {count[lang]}
           </Text>
         </View>
       </View>
@@ -330,6 +365,10 @@ const Controls = ({
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
+          borderRadius: 10,
+          aspectRatio: 230 / 360,
+          boxShadow: "inset 1px 1px 2px 1px black",
+          backgroundColor: "rgba(122, 122, 122, 0.25)",
         }}
       >
         {remaining.length !== 0 && (
@@ -338,6 +377,26 @@ const Controls = ({
             onPressIn={() => handlePressIn()}
             onPressOut={() => handlePressOut()}
           >
+            {/* <View
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
+                zIndex: 50,
+              }}
+            >
+              <Text
+                style={{
+                  color: "rgba(255, 255, 255, 0.8)",
+                  fontWeight: "500",
+                  fontSize: 30,
+                  textAlign: "center",
+                }}
+              >
+                {remaining.length}
+              </Text>
+            </View> */}
             {remaining.map((x, i) => (
               <Animated.View
                 key={i}
@@ -347,8 +406,10 @@ const Controls = ({
                   left: "50%",
                   top: "50%",
                   transform: [
-                    { translateX: -30 },
-                    { translateY: -0.1 * i - 50 },
+                    // { translateX: -30 },
+                    // { translateY: -0.1 * i - 50 },
+                    { translateX: -(vw * 0.15) / 2 },
+                    { translateY: -(vw * 0.15 * (360 / 230)) / 2 },
                     ...(x === remaining[remaining.length - 1]
                       ? [{ translateY }]
                       : []),
@@ -383,42 +444,48 @@ const Controls = ({
             }}
             style={{
               display: "flex",
-              justifyContent: "center", 
+              justifyContent: "center",
               alignItems: "center",
-              width: "100%",
-              borderWidth: 2,
+              borderWidth: 0,
               borderColor: !cycleBorder
                 ? "rgba(255, 255, 255, 1)"
                 : "rgba(255, 255, 255, 0.5)",
-              borderRadius: "25%",
-              aspectRatio: 1,
-              borderStyle: "dotted",
+              borderRadius: "10%",
+              width: vw * 0.15,
+              aspectRatio: 230 / 360,
+              borderStyle: "dashed",
             }}
           >
-            {boxFour.length !== 12 && <Text
-              style={{
-                color: !cycleBorder
-                  ? "rgba(255, 255, 255, 1)"
-                  : "rgba(255, 255, 255, 0.5)",
-                fontWeight: "600",
-                fontSize: 20,
-                textAlign: "center",
-              }}
-            >
-              Cycle Deck
-            </Text>}
-                        {boxFour.length === 12 && <Text
-              style={{
-                color: !cycleBorder
-                  ? "rgba(255, 255, 255, 1)"
-                  : "rgba(255, 255, 255, 0.5)",
-                fontWeight: "600",
-                fontSize: 20,
-                textAlign: "center",
-              }}
-            >
-              Results
-            </Text>}
+            {boxFour.length !== 12 && (
+              <Text
+                style={{
+                  color: !cycleBorder
+                    ? "rgba(255, 217, 0, 1)"
+                    : "rgba(255, 255, 255, 0.5)",
+                  fontWeight: "500",
+                  fontSize: 20,
+                  textAlign: "center",
+                  fontFamily: "Jua_400Regular"
+                }}
+              >
+                {cycle[lang]}
+              </Text>
+            )}
+            {boxFour.length === 12 && (
+              <Text
+                style={{
+                  color: !cycleBorder
+                    ? "rgba(255, 217, 0, 1)"
+                    : "rgba(255, 255, 255, 0.5)",
+                  fontWeight: "500",
+                  fontSize: 20,
+                  textAlign: "center",
+                  fontFamily: "Jua_400Regular"
+                }}
+              >
+                {result[lang]}
+              </Text>
+            )}
           </Pressable>
         )}
       </View>
@@ -432,44 +499,71 @@ const Controls = ({
           alignItems: "center",
           height: 70,
           paddingVertical: 5,
+          paddingHorizontal: 0,
         }}
       >
         <Pressable
-          style={{
-            width: "50%",
-          }}
+          style={{ width: "50%" }}
           onPressIn={() => {
             Haptics.selectionAsync();
-            setInfo(false);
+            setSound(false);
           }}
           onPressOut={() => {
-            setInfo(true);
-            setOpenOptions(true);
+            setSound(true);
+            setMute(!mute);
           }}
         >
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              alignItems: "center",
-              height: "100%",
-            }}
-          >
-            <Feather
-              name="info"
-              size={38}
-              color={info ? "white" : "rgba(255,255,255,0.5)"}
-            />
-            <Text
+          {!mute ? (
+            <View
               style={{
-                color: info ? "white" : "rgba(255,255,255,0.5)",
-                fontSize: 12,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                alignItems: "center",
+                height: "100%",
               }}
             >
-              Info
-            </Text>
-          </View>
+              <Feather
+                name="volume-2"
+                size={32}
+                color={sound ? "white" : "rgba(255,255,255,0.5)"}
+              />
+              <Text
+                style={{
+                  color: sound ? "white" : "rgba(255,255,255,0.5)",
+                  fontSize: 18,
+                  fontFamily: "Jua_400Regular"
+                }}
+              >
+                {audio[lang]}
+              </Text>
+            </View>
+          ) : (
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <Feather
+                name="volume-x"
+                size={32}
+                color={sound ? "rgba(255,255,255,0.5)" : "white"}
+              />
+              <Text
+                style={{
+                  color: sound ? "rgba(255,255,255,0.5)" : "white",
+                  fontSize: 18,
+                  fontFamily: "Jua_400Regular"
+                }}
+              >
+                {audio[lang]}
+              </Text>
+            </View>
+          )}
         </Pressable>
         <Pressable
           style={{
@@ -495,16 +589,17 @@ const Controls = ({
           >
             <Entypo
               name="cycle"
-              size={38}
+              size={28}
               color={restart ? "white" : "rgba(255,255,255,0.5)"}
             />
             <Text
               style={{
                 color: restart ? "white" : "rgba(255,255,255,0.5)",
-                fontSize: 12,
+                fontSize: 18,
+                fontFamily: "Jua_400Regular"
               }}
             >
-              Restart
+              {retry[lang]}
             </Text>
           </View>
         </Pressable>
@@ -542,7 +637,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     borderColor: "indianred",
     backgroundColor: "rgba(188, 26, 8, 1)",
-    boxShadow: "1px 1px 2px black",
+    boxShadow: "2px 2px 2px 0px black",
   },
   image: {
     width: "100%",

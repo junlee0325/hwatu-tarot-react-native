@@ -1,3 +1,4 @@
+import { useLanguage } from "@/context/LanguageContext";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import {
@@ -16,9 +17,8 @@ interface Card {
   id: string; // optional, unique identifier
   img: string;
   rotation: number;
-  title1: string;
-  title2: string;
-  meaning: string;
+  title: { en: string; ko: string };
+  meaning: { en: string; ko: string };
 }
 
 type Props = {
@@ -27,8 +27,12 @@ type Props = {
   imageSet: Record<string, any>;
 };
 
+const close = { en: "Close", ko: "닫기" };
+
 const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
   const { width: vw } = Dimensions.get("window");
+
+  const { lang } = useLanguage();
 
   const [scale] = useState(new Animated.Value(1));
   const [opacity] = useState(new Animated.Value(0));
@@ -58,7 +62,6 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
   };
 
   const handleClose = () => {
-    Haptics.selectionAsync();
     Animated.timing(opacity, {
       toValue: 0,
       duration: 300,
@@ -78,17 +81,17 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
         width: "100%",
         height: "100%",
         zIndex: 20,
-        backgroundColor: "rgba(0,0,0,.5)",
+        backgroundColor: "rgba(255, 255, 255, 0.3)",
+        opacity,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        opacity,
       }}
     >
       <View
         style={{
-          backgroundColor: "#cccccc",
-          borderRadius: 10,
+          backgroundColor: "rgba(235, 235, 235, 0.8)",
+          borderRadius: 15,
           padding: 10,
           width: "90%",
           height: "30%",
@@ -96,6 +99,7 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
           flexDirection: "column",
           justifyContent: "space-between",
           alignItems: "center",
+          boxShadow: "inset 1px 2px 3px 3px white, 1px 3px 3px 2px black",
         }}
       >
         <View
@@ -105,29 +109,31 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
             flexDirection: "row",
             flexWrap: "wrap",
             justifyContent: "center",
-            alignItems: "center",
-            height: "70%",
-            gap: 4,
-            backgroundColor: "#e0e0e0ff",
+            alignContent: "center",
+            height: "80%",
+            gap: 6,
+            backgroundColor: "rgba(235, 235, 235, 0.8)",
             boxShadow: "inset 1px 1px 4px black",
             paddingVertical: 5,
-            borderRadius: 8,
+            borderRadius: 10,
             paddingHorizontal: 12,
           }}
         >
-          {selectedBox.length > 0 ? (
+          {selectedBox.length > 0 &&
             selectedBox.map((card, i) => {
               const hasFour = monthCounts[card.month] === 4;
               return (
                 <View
                   style={{
-                    width: vw * 0.12,
+                    width: vw * 0.11,
                     aspectRatio: 230 / 360,
                     borderRadius: 2,
-                    transform: [{ rotate: `${card.rotation}deg` }],
-                    borderColor: hasFour ? "yellow" : "indianred",
-                    borderWidth: 1,
-                    boxShadow: "2px 2px 2px black",
+                    // transform: [{ rotate: `${card.rotation}deg` }],
+                    borderColor: hasFour ? "rgba(255, 217, 0, 1)" : "indianred",
+                    borderWidth: hasFour ? 2 : 1,
+                    boxShadow: hasFour
+                      ? "0px 0px 0px 2px rgba(0, 0, 0, 1)"
+                      : "2px 2px 2px black",
                   }}
                   key={i}
                 >
@@ -139,38 +145,46 @@ const BoxCheckOverlay = ({ setOpenCheckBox, selectedBox, imageSet }: Props) => {
                   />
                 </View>
               );
-            })
-          ) : (
-            <View
-              style={{
-                height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>No cards in this box</Text>
-            </View>
-          )}
+            })}
         </View>
 
-        <View style={{ height: "30%" }}>
+        <View
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
           <Pressable
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
             onPress={() => handleClose()}
             onPressIn={() => handlePressIn()}
             onPressOut={() => handlePressOut()}
           >
             <Animated.View
               style={{
-                marginTop: 20,
-                backgroundColor: "rgba(0,0,0,0.7)",
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 8,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(75, 75, 75, 1)",
+                paddingVertical: 8,
+                width: "25%",
+                borderRadius: 10,
+                boxShadow: "inset 2px 2px 2px white, 2px 2px 2px 1px black",
                 transform: [{ scale }],
               }}
             >
-              <Text style={{ color: "white", fontWeight: "bold" }}>Close</Text>
+              <Text
+                style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
+              >
+                {close[lang]}
+              </Text>
             </Animated.View>
           </Pressable>
         </View>

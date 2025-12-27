@@ -1,3 +1,8 @@
+import { useLanguage } from "@/context/LanguageContext";
+import {
+  Jua_400Regular,
+  useFonts as useJuaFonts,
+} from "@expo-google-fonts/jua";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import React, { useEffect } from "react";
@@ -16,9 +21,8 @@ interface Card {
   id: string; // optional, unique identifier
   img: string;
   rotation: number;
-  title1: string;
-  title2: string;
-  meaning: string;
+  title: { en: string; ko: string };
+  meaning: { en: string; ko: string };
 }
 
 interface Prop {
@@ -43,20 +47,38 @@ const FourStack = ({
   showLabels,
   mute,
 }: Prop) => {
+  
+  const { lang } = useLanguage();
+
+  const [juaLoaded] = useJuaFonts({ Jua_400Regular });
+
   // Sounds
-  //////////////////////
-  const plasticPlayer = useAudioPlayer(require("../assets/plastic.mp3"));
+  ////////////////
+  const plasticPlayers = [
+    useAudioPlayer(require("../assets/plastic.mp3")),
+    useAudioPlayer(require("../assets/plastic.mp3")),
+    useAudioPlayer(require("../assets/plastic.mp3")),
+  ];
 
   useEffect(() => {
-    plasticPlayer.volume = 0.2;
+    plasticPlayers.forEach((p) => {
+      p.volume = 0.05;
+    });
   }, []);
 
-  const playSfx = (player: any) => {
-    player.seekTo(0);
-    player.play();
-    player.seekTo(0);
+  const playPlastic = () => {
+    for (let i = 0; i < plasticPlayers.length; i++) {
+      const player = plasticPlayers[i];
+
+      if (!player.playing) {
+        player.seekTo(0);
+        player.play();
+        return;
+      }
+    }
+    // all busy → drop sound (correct behavior)
   };
-  //////////////////////////
+  //////////////////////
 
   const { width: vw } = Dimensions.get("window");
 
@@ -66,7 +88,7 @@ const FourStack = ({
     if (first === null) {
       setFirst(card);
       if (!mute) {
-        playSfx(plasticPlayer);
+        playPlastic();
       }
       console.log("first card selected");
     }
@@ -87,7 +109,7 @@ const FourStack = ({
   return (
     <View
       style={{
-        width: 70,
+        width: "20%",
         display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
@@ -102,7 +124,7 @@ const FourStack = ({
             style={{
               ...styles.imageBox,
               width: vw * 0.15,
-              top: 18 * i,
+              top: vw * 0.15 * (360 / 230) * 0.25 * i,
               borderColor: first === x ? "indianred" : "indianred",
               borderWidth:
                 x === fourCards[fourCards.length - 1]
@@ -124,7 +146,7 @@ const FourStack = ({
               boxShadow:
                 x === fourCards[fourCards.length - 1]
                   ? first === x
-                    ? "1px 1px 10px 1px yellow"
+                    ? "0px 0px 0px 2px rgba(255, 217, 0, 1)"
                     : "2px 2px 2px black"
                   : "1px 1px 2px black",
               zIndex: first === x ? 10 : 1,
@@ -148,7 +170,7 @@ const FourStack = ({
               <View
                 style={{
                   position: "absolute",
-                  right:0,
+                  right: 0,
                   left: 0,
                   bottom: 0,
                   marginVertical: 4,
@@ -158,17 +180,19 @@ const FourStack = ({
               >
                 <Text
                   style={{
-                    backgroundColor: "rgba(255,255,255,0.8)",
+                    backgroundColor: "rgba(255, 217, 0, 1)",
+                    width: "100%",
                     color: "black",
                     textAlign: "center",
                     borderRadius: 2,
-                    fontSize: vw * 0.025,
+                    fontSize: lang === "en" ? 14 : 16,
                     fontWeight: "bold",
-                    paddingHorizontal: 4,
-                    opacity: x === fourCards[fourCards.length - 1] ? 1 : 0
+                    paddingVertical: 1,
+                    opacity: x === fourCards[fourCards.length - 1] ? 1 : 0,
+                    fontFamily: "Jua_400Regular"
                   }}
                 >
-                  {x.title1}
+                  {x.title[lang]}
                 </Text>
               </View>
             )}
