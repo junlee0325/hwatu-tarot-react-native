@@ -463,7 +463,7 @@ const Controls = ({
                     ? "rgba(255, 217, 0, 1)"
                     : "rgba(255, 255, 255, 0.5)",
                   fontWeight: "500",
-                  fontSize: 20,
+                  fontSize: lang === "en" ? 20 : 24,
                   textAlign: "center",
                   fontFamily: "Jua_400Regular"
                 }}
@@ -478,7 +478,7 @@ const Controls = ({
                     ? "rgba(255, 217, 0, 1)"
                     : "rgba(255, 255, 255, 0.5)",
                   fontWeight: "500",
-                  fontSize: 20,
+                  fontSize: lang === "en" ? 20 : 24,
                   textAlign: "center",
                   fontFamily: "Jua_400Regular"
                 }}
