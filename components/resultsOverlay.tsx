@@ -1,12 +1,10 @@
 import { useLanguage } from "@/context/LanguageContext";
-import {
-  Jua_400Regular,
-  useFonts as useJuaFonts,
-} from "@expo-google-fonts/jua";
+import { useFonts } from "expo-font";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -32,6 +30,7 @@ type Props = {
   boxThree: Card[];
   boxFour: Card[];
   imageSet: Record<string, any>;
+  setResults: (value: Card[][]) => void;
 };
 
 const close = { en: "Close", ko: "닫기" };
@@ -62,12 +61,19 @@ const ResultsOverlay = ({
   boxThree,
   boxFour,
   imageSet,
+  setResults,
 }: Props) => {
+  const { width: vw, height: vh } = Dimensions.get("window");
+
   const { lang } = useLanguage();
 
-    const [juaLoaded] = useJuaFonts({ Jua_400Regular });
+  const [fontsLoaded] = useFonts({
+    // Point directly to your local asset
+    "GowunDodum-Regular": require("../assets/fonts/GowunDodum-Regular.ttf"),
+    "Gugi-Regular": require("../assets/fonts/Gugi-Regular.ttf"),
+  });
 
-  const [scale] = useState(new Animated.Value(1));
+  const [translateClose, setTranslateClose] = useState(0);
   const [opacity] = useState(new Animated.Value(0));
 
   useEffect(() => {
@@ -77,22 +83,6 @@ const ResultsOverlay = ({
       useNativeDriver: true,
     }).start();
   }, []);
-
-  const handlePressIn = () => {
-    Haptics.selectionAsync();
-    Animated.spring(scale, {
-      toValue: 0.85,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 3,
-      useNativeDriver: true,
-    }).start();
-  };
 
   const handleClose = () => {
     Animated.timing(opacity, {
@@ -112,10 +102,13 @@ const ResultsOverlay = ({
 
       boxes.map((x, i) => {
         boxes[i].map((card) => {
-          const monthCounts = boxes[i].reduce((acc, card) => {
-            acc[card.month] = (acc[card.month] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
+          const monthCounts = boxes[i].reduce(
+            (acc, card) => {
+              acc[card.month] = (acc[card.month] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>,
+          );
 
           if (monthCounts[card.month] === 4) {
             matched.push(card);
@@ -124,11 +117,11 @@ const ResultsOverlay = ({
       });
 
       const orderedRanks = matched.sort(
-        (a, b) => ranks.indexOf(a.rank) - ranks.indexOf(b.rank)
+        (a, b) => ranks.indexOf(a.rank) - ranks.indexOf(b.rank),
       );
 
       const orderedMonths = orderedRanks.sort(
-        (a, b) => months.indexOf(a.month) - months.indexOf(b.month)
+        (a, b) => months.indexOf(a.month) - months.indexOf(b.month),
       );
 
       const result: Card[][] = [];
@@ -146,6 +139,7 @@ const ResultsOverlay = ({
       result.push(currentGroup);
 
       setMatches(result);
+      setResults(result);
     }
   }, [boxFour]);
 
@@ -169,7 +163,7 @@ const ResultsOverlay = ({
           borderRadius: 15,
           padding: 10,
           width: "90%",
-          height: "60%",
+          height: "70%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
@@ -183,21 +177,27 @@ const ResultsOverlay = ({
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "rgba(235, 235, 235, 0.8)",
-            boxShadow: "inset 1px 1px 4px black",
-            padding: 8,
             borderRadius: 10,
             width: "100%",
+            height: vh * 0.05,
+            backgroundColor: "rgb(42, 83, 60)",
           }}
         >
-          <Text style={{ fontSize: 20, fontFamily: "Jua_400Regular",  }}>
+          <Text
+            style={{
+              fontSize: vw * 0.06,
+              fontFamily: "Gugi-Regular",
+              color: "rgba(255, 217, 0, 1)",
+            }}
+            allowFontScaling={false}
+          >
             {new Date().toLocaleDateString()} {result[lang]}
           </Text>
         </View>
         <View
           style={{
             width: "100%",
-            height: "75%",
+            height: "80%",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-evenly",
@@ -291,7 +291,7 @@ const ResultsOverlay = ({
                 display: "flex",
                 flexDirection: "column",
                 flexWrap: "nowrap",
-                gap: 0,
+                gap: 5,
               }}
             >
               {matches.map((x, i) => (
@@ -304,6 +304,7 @@ const ResultsOverlay = ({
                     flexWrap: "wrap",
                     justifyContent: "space-between",
                     alignItems: "flex-start",
+
                     // borderWidth: 1,
                     // borderColor: "blue",
                   }}
@@ -345,7 +346,7 @@ const ResultsOverlay = ({
                       flexDirection: "column",
                       alignItems: "flex-start",
                       justifyContent: "flex-start",
-                      gap: 2,
+                      gap: 0,
                     }}
                   >
                     <View
@@ -357,10 +358,25 @@ const ResultsOverlay = ({
                         alignItems: "flex-end",
                       }}
                     >
-                      <Text style={{ fontSize: 18, fontWeight: "bold", fontFamily: "Jua_400Regular", }}>
+                      <Text
+                        style={{
+                          fontSize: vw * 0.04,
+                          fontWeight: "bold",
+                          fontFamily: "GowunDodum-Regular",
+                          textAlign: "right",
+                        }}
+                        allowFontScaling={false}
+                      >
                         {matches[i][1].title.en}
                       </Text>
-                      <Text style={{ fontSize: 18, fontWeight: "bold", fontFamily: "Jua_400Regular", }}>
+                      <Text
+                        style={{
+                          fontSize: vw * 0.04,
+                          fontWeight: "bold",
+                          fontFamily: "GowunDodum-Regular",
+                        }}
+                        allowFontScaling={false}
+                      >
                         {matches[i][1].title.ko}
                       </Text>
                     </View>
@@ -371,7 +387,14 @@ const ResultsOverlay = ({
                         backgroundColor: "black",
                       }}
                     ></View>
-                    <Text style={{ fontSize: 14, paddingTop: 4, fontFamily: "Jua_400Regular", }}>
+                    <Text
+                      style={{
+                        fontSize: vw * 0.035,
+                        paddingTop: 4,
+                        fontFamily: "GowunDodum-Regular",
+                      }}
+                      allowFontScaling={false}
+                    >
                       {matches[i][1].meaning[lang]}
                     </Text>
                   </View>
@@ -386,6 +409,7 @@ const ResultsOverlay = ({
             justifyContent: "center",
             alignItems: "center",
             width: "100%",
+            height: vh * 0.05,
           }}
         >
           <Pressable
@@ -396,24 +420,33 @@ const ResultsOverlay = ({
               width: "100%",
             }}
             onPress={() => handleClose()}
-            onPressIn={() => handlePressIn()}
-            onPressOut={() => handlePressOut()}
+            onPressIn={() => {
+              Haptics.selectionAsync();
+              setTranslateClose(2);
+            }}
+            onPressOut={() => setTranslateClose(0)}
           >
             <Animated.View
               style={{
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: "rgba(75, 75, 75, 1)",
-                paddingVertical: 8,
-                width: "25%",
+                backgroundColor: "rgb(219, 0, 0)",
+                paddingVertical: 0,
+                height: "100%",
+                width: "100%",
                 borderRadius: 10,
                 boxShadow: "inset 2px 2px 2px white, 2px 2px 2px 1px black",
-                transform: [{ scale }],
+                transform: [{ translateY: translateClose }],
               }}
             >
               <Text
-                style={{ color: "white", fontWeight: "bold", fontSize: 16, fontFamily: "Jua_400Regular" }}
+                style={{
+                  color: "white",
+                  fontWeight: "500",
+                  fontSize: vw * 0.05,
+                }}
+                allowFontScaling={false}
               >
                 {close[lang]}
               </Text>

@@ -1,6 +1,9 @@
 import { LanguageProvider } from "@/context/LanguageContext";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
@@ -8,10 +11,6 @@ export default function RootLayout() {
       <LanguageProvider>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
         </Stack>
       </LanguageProvider>
     </SafeAreaProvider>

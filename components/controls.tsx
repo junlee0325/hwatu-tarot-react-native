@@ -1,23 +1,20 @@
 import { useLanguage } from "@/context/LanguageContext";
-import {
-  Jua_400Regular,
-  useFonts as useJuaFonts,
-} from "@expo-google-fonts/jua";
 import Entypo from "@expo/vector-icons/Entypo";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAudioPlayer } from "expo-audio";
+import { useFonts } from "expo-font";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Dimensions,
   Image,
   Pressable,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 
 interface Card {
@@ -43,6 +40,7 @@ interface Prop {
   boxFour: Card[];
   setOpenResults: (value: boolean) => void;
   setOpenInfo: (value: boolean) => void;
+  setResetOpen: (value: boolean) => void;
 }
 
 const audio = { en: "Audio", ko: "음향" };
@@ -66,10 +64,15 @@ const Controls = ({
   boxFour,
   setOpenResults,
   setOpenInfo,
+  setResetOpen,
 }: Prop) => {
   const { lang } = useLanguage();
 
-  const [juaLoaded] = useJuaFonts({ Jua_400Regular });
+  const [fontsLoaded] = useFonts({
+    // Point directly to your local asset
+    "GowunDodum-Regular": require("../assets/fonts/GowunDodum-Regular.ttf"),
+    "Gugi-Regular": require("../assets/fonts/Gugi-Regular.ttf"),
+  });
 
   // Sounds
   //////////////////////
@@ -227,29 +230,14 @@ const Controls = ({
     });
   };
 
-  const handleResetPress = () => {
-    Alert.alert("Restart", "Start over with a new deck?", [
-      {
-        text: "Yes",
-        onPress: () => {
-          setShowCycle(false);
-          handleReset();
-        },
-        style: "default",
-      },
-      {
-        text: "Cancel",
-        style: "destructive",
-      },
-    ]);
-  };
-
   const [cycleBorder, setCycleBorder] = useState(false);
 
   const [sound, setSound] = useState(true);
   const [labels, setLabels] = useState(true);
   const [info, setInfo] = useState(true);
   const [restart, setRestart] = useState(true);
+
+  const [touch, setTouch] = useState(true);
 
   return (
     <View style={styles.bottomBar}>
@@ -288,15 +276,17 @@ const Controls = ({
             >
               <MaterialCommunityIcons
                 name="label-outline"
-                size={34}
+                size={vw * 0.09}
                 color={labels ? "white" : "rgba(255,255,255,0.5)"}
+                allowFontScaling={false}
               />
               <Text
                 style={{
                   color: labels ? "white" : "rgba(255,255,255,0.5)",
-                  fontSize: 18,
-                  fontFamily: "Jua_400Regular"
+                  fontSize: vw * 0.04,
+                  fontFamily: "GowunDodum-Regular",
                 }}
+                allowFontScaling={false}
               >
                 {helper[lang]}
               </Text>
@@ -313,15 +303,17 @@ const Controls = ({
             >
               <MaterialCommunityIcons
                 name="label-off-outline"
-                size={34}
+                size={vw * 0.09}
                 color={labels ? "rgba(255,255,255,0.5)" : "white"}
+                allowFontScaling={false}
               />
               <Text
                 style={{
                   color: labels ? "rgba(255,255,255,0.5)" : "white",
-                  fontSize: 18,
-                  fontFamily: "Jua_400Regular"
+                  fontSize: vw * 0.04,
+                  fontFamily: "GowunDodum-Regular",
                 }}
+                allowFontScaling={false}
               >
                 {helper[lang]}
               </Text>
@@ -340,19 +332,22 @@ const Controls = ({
         >
           <Text
             style={{
-              color: labels ? "white" : "rgba(255,255,255,0.5)",
-              fontSize: 26,
-              fontFamily: "Jua_400Regular",padding:4
+              color: "white",
+              fontSize: vw * 0.07,
+              fontFamily: "Gugi-Regular",
+              padding: 4,
             }}
+            allowFontScaling={false}
           >
             {remaining.length}
           </Text>
           <Text
             style={{
-              color: labels ? "white" : "rgba(255,255,255,0.5)",
-              fontSize: 18,
-              fontFamily: "Jua_400Regular"
+              color: "white",
+              fontSize: vw * 0.04,
+              fontFamily: "GowunDodum-Regular",
             }}
+            allowFontScaling={false}
           >
             {count[lang]}
           </Text>
@@ -374,9 +369,26 @@ const Controls = ({
         {remaining.length !== 0 && (
           <Pressable
             style={styles.drawButton}
-            onPressIn={() => handlePressIn()}
-            onPressOut={() => handlePressOut()}
+            onPressIn={() => {
+              handlePressIn();
+              setTouch(false);
+            }}
+            onPressOut={() => {
+              handlePressOut();
+              setTouch(true);
+            }}
           >
+            <MaterialIcons
+              name="touch-app"
+              size={36}
+              color="rgba(255, 255, 255, 0.75)"
+              style={{
+                borderRadius: "50%",
+                padding: 4,
+                zIndex: 50,
+                opacity: touch ? 1 : 0.5,
+              }}
+            />
             {/* <View
               style={{
                 position: "absolute",
@@ -463,10 +475,11 @@ const Controls = ({
                     ? "rgba(255, 217, 0, 1)"
                     : "rgba(255, 255, 255, 0.5)",
                   fontWeight: "500",
-                  fontSize: lang === "en" ? 20 : 24,
+                  fontSize: lang === "en" ? vw * 0.04 : vw * 0.05,
                   textAlign: "center",
-                  fontFamily: "Jua_400Regular"
+                  fontFamily: "Gugi-Regular",
                 }}
+                allowFontScaling={false}
               >
                 {cycle[lang]}
               </Text>
@@ -478,10 +491,11 @@ const Controls = ({
                     ? "rgba(255, 217, 0, 1)"
                     : "rgba(255, 255, 255, 0.5)",
                   fontWeight: "500",
-                  fontSize: lang === "en" ? 20 : 24,
+                  fontSize: lang === "en" ? vw * 0.04 : vw * 0.05,
                   textAlign: "center",
-                  fontFamily: "Jua_400Regular"
+                  fontFamily: "Gugi-Regular",
                 }}
+                allowFontScaling={false}
               >
                 {result[lang]}
               </Text>
@@ -525,15 +539,17 @@ const Controls = ({
             >
               <Feather
                 name="volume-2"
-                size={32}
+                size={vw * 0.09}
                 color={sound ? "white" : "rgba(255,255,255,0.5)"}
+                allowFontScaling={false}
               />
               <Text
                 style={{
                   color: sound ? "white" : "rgba(255,255,255,0.5)",
-                  fontSize: 18,
-                  fontFamily: "Jua_400Regular"
+                  fontSize: vw * 0.04,
+                  fontFamily: "GowunDodum-Regular",
                 }}
+                allowFontScaling={false}
               >
                 {audio[lang]}
               </Text>
@@ -550,15 +566,17 @@ const Controls = ({
             >
               <Feather
                 name="volume-x"
-                size={32}
+                size={vw * 0.09}
                 color={sound ? "rgba(255,255,255,0.5)" : "white"}
+                allowFontScaling={false}
               />
               <Text
                 style={{
                   color: sound ? "rgba(255,255,255,0.5)" : "white",
-                  fontSize: 18,
-                  fontFamily: "Jua_400Regular"
+                  fontSize: vw * 0.04,
+                  fontFamily: "GowunDodum-Regular",
                 }}
+                allowFontScaling={false}
               >
                 {audio[lang]}
               </Text>
@@ -575,7 +593,7 @@ const Controls = ({
           }}
           onPressOut={() => {
             setRestart(true);
-            handleResetPress();
+            setResetOpen(true);
           }}
         >
           <View
@@ -589,15 +607,17 @@ const Controls = ({
           >
             <Entypo
               name="cycle"
-              size={28}
+              size={vw * 0.08}
               color={restart ? "white" : "rgba(255,255,255,0.5)"}
+              allowFontScaling={false}
             />
             <Text
               style={{
                 color: restart ? "white" : "rgba(255,255,255,0.5)",
-                fontSize: 18,
-                fontFamily: "Jua_400Regular"
+                fontSize: vw * 0.04,
+                fontFamily: "GowunDodum-Regular",
               }}
+              allowFontScaling={false}
             >
               {retry[lang]}
             </Text>

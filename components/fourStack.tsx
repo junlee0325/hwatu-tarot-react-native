@@ -47,7 +47,6 @@ const FourStack = ({
   showLabels,
   mute,
 }: Prop) => {
-  
   const { lang } = useLanguage();
 
   const [juaLoaded] = useJuaFonts({ Jua_400Regular });
@@ -173,7 +172,7 @@ const FourStack = ({
                   right: 0,
                   left: 0,
                   bottom: 0,
-                  marginVertical: 4,
+                  margin: 1,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -185,11 +184,10 @@ const FourStack = ({
                     color: "black",
                     textAlign: "center",
                     borderRadius: 2,
-                    fontSize: lang === "en" ? 14 : 16,
-                    fontWeight: "bold",
+                    fontSize: lang === "en" ? vw * 0.025 : vw * 0.03,
+                    fontWeight: "500",
                     paddingVertical: 1,
                     opacity: x === fourCards[fourCards.length - 1] ? 1 : 0,
-                    fontFamily: "Jua_400Regular"
                   }}
                 >
                   {x.title[lang]}

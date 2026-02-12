@@ -4,10 +4,13 @@ import FourStack from "@/components/fourStack";
 import Header from "@/components/header";
 import InfoPop from "@/components/infoOverlay";
 import PlayArea from "@/components/playArea";
+import ResetOverlay from "@/components/resetOverlay";
 import ResultsOverlay from "@/components/resultsOverlay";
 import { Asset } from "expo-asset";
 import { useAudioPlayer } from "expo-audio";
+import { useFonts } from "expo-font";
 import * as Haptics from "expo-haptics";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -18,7 +21,7 @@ import {
 } from "react-native";
 import { cardImgs } from "../assets/images";
 
-const { width: vw } = Dimensions.get("window");
+const { width: vw, height: vh } = Dimensions.get("window");
 
 interface Card {
   month: string; // e.g., "Jan", "Feb", etc.
@@ -128,7 +131,7 @@ const deck: Card[] = months.flatMap((month) =>
     rotation: getRandomInt(),
     title: titles[month],
     meaning: meanings[month],
-  }))
+  })),
 );
 
 export default function HomeScreen() {
@@ -169,18 +172,28 @@ export default function HomeScreen() {
 
   //////////////////////////
 
-  // Preload all card images
+  // Preload all card images, vw
   useEffect(() => {
     const preloadImages = async () => {
       const images = Object.values(cardImgs);
       const cacheImages = images.map((img) =>
-        Asset.fromModule(img).downloadAsync()
+        Asset.fromModule(img).downloadAsync(),
       );
       await Promise.all(cacheImages);
       setImagesLoaded(true);
     };
     preloadImages();
+    setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 3000);
   }, []);
+
+  // Preload fonts
+  const [fontsLoaded] = useFonts({
+    // Point directly to your local asset
+    "GowunDodum-Regular": require("../assets/fonts/GowunDodum-Regular.ttf"),
+    "Gugi-Regular": require("../assets/fonts/Gugi-Regular.ttf"),
+  });
 
   const [shuffled, setShuffled] = useState<Card[]>([]);
 
@@ -191,7 +204,7 @@ export default function HomeScreen() {
   const [showLabels, setShowLabels] = useState(false);
   const [mute, setMute] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
-
+  const [resetOpen, setResetOpen] = useState(false);
   const [openInfo, setOpenInfo] = useState(true);
 
   const [first, setFirst] = useState<Card | null>(null);
@@ -338,6 +351,7 @@ export default function HomeScreen() {
 
   // Results
   const [openResults, setOpenResults] = useState(false);
+  const [results, setResults] = useState<Card[][] | null>();
 
   useEffect(() => {
     if (boxFour.length === 12) {
@@ -357,7 +371,7 @@ export default function HomeScreen() {
     ];
 
     const validFourCards: Card[] = lastFourCombined.filter(
-      (x): x is Card => x !== undefined
+      (x): x is Card => x !== undefined,
     );
 
     const validFourMonths = validFourCards.map((x) => x.month);
@@ -369,7 +383,7 @@ export default function HomeScreen() {
 
     if (validFourMonths.length !== 0 && validFourMonthsUnique) {
       const hasMatch = validFourMonths.some((x) =>
-        faceUpsMonths.some((y) => x === y)
+        faceUpsMonths.some((y) => x === y),
       );
 
       if (hasMatch) {
@@ -501,6 +515,7 @@ export default function HomeScreen() {
         boxFour={boxFour}
         setOpenResults={setOpenResults}
         setOpenInfo={setOpenInfo}
+        setResetOpen={setResetOpen}
       />
       {openInfo && (
         <InfoPop setOpenInfo={setOpenInfo} deck={deck} imageSet={cardImgs} />
@@ -520,6 +535,7 @@ export default function HomeScreen() {
           boxThree={boxThree}
           boxFour={boxFour}
           imageSet={cardImgs}
+          setResults={setResults}
         />
       )}
       {/* {openOptions && (
@@ -531,6 +547,9 @@ export default function HomeScreen() {
           setShowLabels={setShowLabels}
         />
       )} */}
+      {resetOpen && (
+        <ResetOverlay handleReset={handleReset} setResetOpen={setResetOpen} />
+      )}
     </ImageBackground>
   );
 }

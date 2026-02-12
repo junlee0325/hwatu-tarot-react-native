@@ -1,13 +1,10 @@
 import { useLanguage } from "@/context/LanguageContext";
-import {
-  Jua_400Regular,
-  useFonts as useJuaFonts,
-} from "@expo-google-fonts/jua";
 import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFonts } from "expo-font";
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Prop {
   setOpenInfo: (value: boolean) => void;
@@ -16,23 +13,28 @@ interface Prop {
 const language = { en: "ENG", ko: "한국어" };
 const information = { en: "Info", ko: "정보" };
 
-const Header = ({setOpenInfo} : Prop) => {
+const Header = ({ setOpenInfo }: Prop) => {
+  const { width: vw } = Dimensions.get("window");
 
   const { lang, setLang } = useLanguage();
   const toggleLang = () => setLang(lang === "en" ? "ko" : "en");
 
-  const [juaLoaded] = useJuaFonts({ Jua_400Regular });
+  const [fontsLoaded] = useFonts({
+    // Point directly to your local asset
+    "GowunDodum-Regular": require("../assets/fonts/GowunDodum-Regular.ttf"),
+    "Gugi-Regular": require("../assets/fonts/Gugi-Regular.ttf"),
+  });
 
   const date = new Date().toLocaleDateString();
   const dayNum = new Date().getDay();
   const days = [
-    { en: "Sunday", ko: "일요일" },
-    { en: "Monday", ko: "월요일" },
-    { en: "Tuesday", ko: "화요일" },
-    { en: "Wednesday", ko: "수요일" },
-    { en: "Thursday", ko: "목요일" },
-    { en: "Friday", ko: "금요일" },
-    { en: "Saturday", ko: "토요일" },
+    { en: "Sun", ko: "일요일" },
+    { en: "Mon", ko: "월요일" },
+    { en: "Tue", ko: "화요일" },
+    { en: "Wed", ko: "수요일" },
+    { en: "Thu", ko: "목요일" },
+    { en: "Fri", ko: "금요일" },
+    { en: "Sat", ko: "토요일" },
   ];
 
   const [english, setEnglish] = useState(true);
@@ -70,15 +72,17 @@ const Header = ({setOpenInfo} : Prop) => {
         >
           <Ionicons
             name="globe-outline"
-            size={26}
+            size={vw * 0.08}
             color={english ? "white" : "rgba(255,255,255,0.5)"}
+            allowFontScaling={false}
           />
           <Text
             style={{
               color: english ? "white" : "rgba(255,255,255,0.5)",
-              fontSize: 16,
-              fontFamily: "Jua_400Regular"
+              fontSize: vw * 0.04,
+              fontFamily: "GowunDodum-Regular",
             }}
+            allowFontScaling={false}
           >
             {language[lang]}
           </Text>
@@ -96,7 +100,7 @@ const Header = ({setOpenInfo} : Prop) => {
           gap: 0,
         }}
       >
-        <View
+        {/* <View
           style={{
             display: "flex",
             flexDirection: "column",
@@ -108,23 +112,25 @@ const Header = ({setOpenInfo} : Prop) => {
         >
           <Text
             style={{
-              fontSize: 16,
+              fontSize: vw * 0.04,
               color: "rgba(255, 255, 255, 1)",
-              fontFamily: "Jua_400Regular",
+              fontFamily: "GowunDodum-Regular",
             }}
+            allowFontScaling={false}
           >
             {lang === "en" ? "화투점" : "Hwatu Tarot"}
           </Text>
           <Text
             style={{
-              fontSize: 26,
+              fontSize: vw * 0.07,
               color: "rgba(255, 217, 0, 1)",
-              fontFamily: "Jua_400Regular",
+              fontFamily: "GowunDodum-Regular",
             }}
+            allowFontScaling={false}
           >
             {lang === "en" ? "Hwatu Tarot" : "화투점"}
           </Text>
-        </View>
+        </View> */}
         <View
           style={{
             display: "flex",
@@ -132,13 +138,27 @@ const Header = ({setOpenInfo} : Prop) => {
             flexWrap: "nowrap",
             alignItems: "center",
             justifyContent: "center",
-            gap: 2,
+            gap: 10,
           }}
         >
-          <Text style={{ fontSize: 14, color: "rgba(255, 217, 0, 1)", fontFamily: "Jua_400Regular" }}>
+          <Text
+            style={{
+              fontSize: vw * 0.06,
+              color: "rgba(255, 217, 0, 1)",
+              fontFamily: "Gugi-Regular",
+            }}
+            allowFontScaling={false}
+          >
             {days[dayNum][lang]}
           </Text>
-          <Text style={{ fontSize: 14, color: "rgba(255, 255, 255, 1)", fontFamily: "Jua_400Regular" }}>
+          <Text
+            style={{
+              fontSize: vw * 0.06,
+              color: "rgba(255, 255, 255, 1)",
+              fontFamily: "Gugi-Regular",
+            }}
+            allowFontScaling={false}
+          >
             {date}
           </Text>
         </View>
@@ -173,15 +193,17 @@ const Header = ({setOpenInfo} : Prop) => {
         >
           <Feather
             name="info"
-            size={28}
+            size={vw * 0.08}
             color={info ? "white" : "rgba(255,255,255,0.5)"}
+            allowFontScaling={false}
           />
           <Text
             style={{
               color: info ? "white" : "rgba(255,255,255,0.5)",
-              fontSize: 16,
-              fontFamily: "Jua_400Regular"
+              fontSize: vw * 0.04,
+              fontFamily: "GowunDodum-Regular",
             }}
+            allowFontScaling={false}
           >
             {information[lang]}
           </Text>

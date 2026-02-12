@@ -1,10 +1,7 @@
 import { useLanguage } from "@/context/LanguageContext";
-import {
-  Jua_400Regular,
-  useFonts as useJuaFonts,
-} from "@expo-google-fonts/jua";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAudioPlayer } from "expo-audio";
+import { useFonts } from "expo-font";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -58,10 +55,13 @@ const PlayArea = ({
   showLabels,
   mute,
 }: Prop) => {
-
   const { lang } = useLanguage();
 
-  const [juaLoaded] = useJuaFonts({ Jua_400Regular });
+  const [fontsLoaded] = useFonts({
+    // Point directly to your local asset
+    "GowunDodum-Regular": require("../assets/fonts/GowunDodum-Regular.ttf"),
+    "Gugi-Regular": require("../assets/fonts/Gugi-Regular.ttf"),
+  });
 
   // Sounds
   //////////////////////
@@ -259,7 +259,7 @@ const PlayArea = ({
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  backgroundColor: opacityCheck(x) ? "rgba(0, 0, 0, 0.5)" : "",
+                  backgroundColor: opacityCheck(x) ? "rgba(0, 0, 0, 0.75)" : "",
                   zIndex: 4,
                   opacity: disableCheck(x) ? 1 : 0,
                 }}
@@ -267,12 +267,11 @@ const PlayArea = ({
                 <MaterialIcons
                   name="do-not-touch"
                   size={30}
-                  color="rgba(255, 255, 255, 0.5)"
+                  color="rgba(255, 255, 255, 0.75)"
                   style={{
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                    borderRadius: "50%",
-                    padding: 4,
-                    boxShadow: "0px 0px 2px 1px rgba(0, 0, 0, 0.5)",
+                    backgroundColor: "rgb(205, 2, 2)",
+                    borderRadius: "10%",
+                    padding: 5,
                   }}
                 />
               </View>
@@ -288,7 +287,7 @@ const PlayArea = ({
                     right: 0,
                     left: 0,
                     bottom: 0,
-                    marginVertical: 4,
+                    margin: 1,
                     justifyContent: "center",
                     alignItems: "center",
                   }}
@@ -300,10 +299,9 @@ const PlayArea = ({
                       color: "black",
                       textAlign: "center",
                       borderRadius: 2,
-                      fontSize: lang === "en" ? 14 : 16,
-                      fontWeight: "bold",
+                      fontSize: lang === "en" ? vw * 0.025 : vw * 0.03,
+                      fontWeight: "500",
                       paddingVertical: 1,
-                      fontFamily: "Jua_400Regular"
                     }}
                   >
                     {x.title[lang]}
@@ -355,7 +353,7 @@ const PlayArea = ({
                   right: 0,
                   left: 0,
                   bottom: 0,
-                  marginVertical: 4,
+                  margin: 1,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -367,10 +365,9 @@ const PlayArea = ({
                     color: "black",
                     textAlign: "center",
                     borderRadius: 2,
-                    fontSize: lang === "en" ? 14 : 16,
-                    fontWeight: "bold",
+                    fontSize: lang === "en" ? vw * 0.025 : vw * 0.03,
+                    fontWeight: "500",
                     paddingVertical: 1,
-                    fontFamily: "Jua_400Regular"
                   }}
                 >
                   {faceUps[0].title[lang]}
